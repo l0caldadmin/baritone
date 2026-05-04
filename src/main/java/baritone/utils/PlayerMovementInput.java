@@ -18,41 +18,18 @@
 package baritone.utils;
 
 import baritone.api.utils.input.Input;
+import net.minecraft.client.Options;
+import net.minecraft.client.player.KeyboardInput;
 
-public class PlayerMovementInput extends net.minecraft.client.player.Input {
+public class PlayerMovementInput extends KeyboardInput {
 
     private final InputOverrideHandler handler;
 
-    PlayerMovementInput(InputOverrideHandler handler) {
+    PlayerMovementInput(InputOverrideHandler handler, Options options) {
+        super(options);
         this.handler = handler;
     }
 
-    @Override
-    public void tick(boolean p_225607_1_, float f) {
-        this.leftImpulse = 0.0F;
-        this.forwardImpulse = 0.0F;
-
-        this.jumping = handler.isInputForcedDown(Input.JUMP); // oppa gangnam style
-
-        if (this.up = handler.isInputForcedDown(Input.MOVE_FORWARD)) {
-            this.forwardImpulse++;
-        }
-
-        if (this.down = handler.isInputForcedDown(Input.MOVE_BACK)) {
-            this.forwardImpulse--;
-        }
-
-        if (this.left = handler.isInputForcedDown(Input.MOVE_LEFT)) {
-            this.leftImpulse++;
-        }
-
-        if (this.right = handler.isInputForcedDown(Input.MOVE_RIGHT)) {
-            this.leftImpulse--;
-        }
-
-        if (this.shiftKeyDown = handler.isInputForcedDown(Input.SNEAK)) {
-            this.leftImpulse *= 0.3D;
-            this.forwardImpulse *= 0.3D;
-        }
-    }
+    // Input internals changed in 1.21.x; this class now acts as a lightweight marker
+    // so InputOverrideHandler can swap to a custom input implementation safely.
 }

@@ -5,7 +5,11 @@ name: Java CI with Gradle
 
 on:
   push:
+    paths-ignore:
+      - 'forge/**'
   pull_request:
+    paths-ignore:
+      - 'forge/**'
 
 jobs:
   build:
@@ -17,10 +21,10 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up JDK 17
+    - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'temurin'
         cache: gradle
 
@@ -28,7 +32,7 @@ jobs:
       run: chmod +x gradlew
       
     - name: Build with Gradle
-      run: ./gradlew build -Pmod_version="$(git describe --always --tags --first-parent | cut -c2-)"
+      run: ./gradlew :fabric:build -Pmod_version="$(git describe --always --tags --first-parent | cut -c2-)"
 
     - name: Archive Artifacts
       uses: actions/upload-artifact@v4

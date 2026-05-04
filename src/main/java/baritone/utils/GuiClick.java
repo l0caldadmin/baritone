@@ -23,10 +23,11 @@ import baritone.api.pathing.goals.GoalBlock;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.Helper;
 import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -62,7 +63,7 @@ public class GuiClick extends Screen implements Helper {
     }
 
     @Override
-    public void render(PoseStack stack, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         double mx = mc.mouseHandler.xpos();
         double my = mc.mouseHandler.ypos();
 
@@ -75,7 +76,7 @@ public class GuiClick extends Screen implements Helper {
         if (near != null && far != null) {
             Vec3 viewerPos = new Vec3(PathRenderer.posX(), PathRenderer.posY(), PathRenderer.posZ());
             LocalPlayer player = BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().player();
-            HitResult result = player.level.clip(new ClipContext(near.add(viewerPos), far.add(viewerPos), ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
+            HitResult result = player.level().clip(new ClipContext(near.add(viewerPos), far.add(viewerPos), ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
             if (result != null && result.getType() == HitResult.Type.BLOCK) {
                 currentMouseOver = ((BlockHitResult) result).getBlockPos();
             }
@@ -83,7 +84,10 @@ public class GuiClick extends Screen implements Helper {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int mouseButton) {
+    public boolean mouseReleased(MouseButtonEvent event) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int mouseButton = event.button();
         if (currentMouseOver != null) { //Catch this, or else a click into void will result in a crash
             if (mouseButton == 0) {
                 if (clickStart != null && !clickStart.equals(currentMouseOver)) {
@@ -92,9 +96,7 @@ public class GuiClick extends Screen implements Helper {
                     MutableComponent component = Component.literal("Selection made! For usage: " + Baritone.settings().prefix.value + "help sel");
                     component.setStyle(component.getStyle()
                             .withColor(ChatFormatting.WHITE)
-                            .withClickEvent(new ClickEvent(
-                                    ClickEvent.Action.RUN_COMMAND,
-                                    FORCE_COMMAND_PREFIX + "help sel"
+                            .withClickEvent(new ClickEvent.RunCommand(FORCE_COMMAND_PREFIX + "help sel"
                             )));
                     Helper.HELPER.logDirect(component);
                     clickStart = null;
@@ -106,13 +108,13 @@ public class GuiClick extends Screen implements Helper {
             }
         }
         clickStart = null;
-        return super.mouseReleased(mouseX, mouseY, mouseButton);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean focused) {
         clickStart = currentMouseOver;
-        return super.mouseClicked(mouseX, mouseY, mouseButton);
+        return super.mouseClicked(event, focused);
     }
 
     public void onRender(PoseStack modelViewStack, Matrix4f projectionMatrix) {

@@ -1,6 +1,6 @@
 # Installation
 
-The easiest way to install Baritone is to install it as Forge/Neoforge/Fabric mod, but if you know how you can also use it with a custom `version.json`
+The easiest way to install Baritone is to install it as a Fabric mod, but if you know how you can also use it with a custom `version.json`
 (Examples: [1.14.4](https://www.dropbox.com/s/rkml3hjokd3qv0m/1.14.4-Baritone.zip?dl=1), [1.15.2](https://www.dropbox.com/s/8rx6f0kts9hvd4f/1.15.2-Baritone.zip?dl=1), [1.16.5](https://www.dropbox.com/s/i6f292o2i7o9acp/1.16.5-Baritone.zip?dl=1)).
 
 Once Baritone is installed, look [here](USAGE.md) for instructions on how to use it.
@@ -24,7 +24,7 @@ The build is fully deterministic and reproducible, and you can verify that by ru
 
 Building Baritone will create the final artifacts in the ``dist`` directory. These are the same as the artifacts created in the [releases](https://github.com/cabaletta/baritone/releases).
 
-**The Forge, NeoForge and Fabric releases can simply be added as a Forge/Neoforge/Fabric mods.**
+**The Fabric release can simply be added as a Fabric mod.**
 
 If another one of your other mods has a Baritone integration, you want `baritone-api-*-VERSION.jar`.
 If you want to report a bug and spare us some effort, you want `baritone-unoptimized-*-VERSION.jar`.
@@ -36,7 +36,7 @@ Here's what the various qualifiers mean
 - **Unoptimized**: Nothing is obfuscated. This shouldn't be used in production, but is really helpful for crash reports.
 
 - **No loader**: Loadable as a launchwrapper tweaker against vanilla Minecraft using a custom `version.json`.
-- **Forge/Neoforge/Fabric**: Loadable as a standard mod using the respective loader. The fabric build may or may not work on Quilt.
+- **Fabric**: Loadable as a standard mod using Fabric Loader. The Fabric build may or may not work on Quilt.
 
 If you build from source you will also find mapping files in the `dist` directory. These contain the renamings done by ProGuard and are useful if you want to read obfuscated stack traces.
 
@@ -71,8 +71,8 @@ For more details, see [the build ci action](/.github/workflows/gradle_build.yml)
 For most branches `gradlew build` should build everything, but there are exceptions and this file might be out of date.
 
 More specifically, on older branches the setup used to be that `gradlew build` builds the tweaker jar
-and `gradlew build -Pbaritone.forge_build` / `gradlew build -Pbaritone.fabric_build` are needed to build
-for Forge/Fabric instead. And you might have to run `setupDecompWorkspace` first.
+and additional branch-specific flags were needed for loader builds. You might also have to run
+`setupDecompWorkspace` first.
 
 ## IntelliJ
 - Open the project in IntelliJ as a Gradle project

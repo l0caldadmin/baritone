@@ -21,7 +21,6 @@ import baritone.Baritone;
 import baritone.api.cache.IWorldProvider;
 import baritone.api.utils.IPlayerContext;
 import net.minecraft.client.multiplayer.ServerData;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
@@ -110,9 +109,9 @@ public class WorldProvider implements IWorldProvider {
     }
 
     private Path getWorldDataDirectory(Path parent, Level world) {
-        ResourceLocation dimId = world.dimension().location();
+        String dimKey = world.dimension().toString().replace(':', '_').replace('/', '_');
         int height = world.dimensionType().logicalHeight();
-        return parent.resolve(dimId.getNamespace()).resolve(dimId.getPath() + "_" + height);
+        return parent.resolve("dimensions").resolve(dimKey + "_" + height);
     }
 
     /**
@@ -140,7 +139,7 @@ public class WorldProvider implements IWorldProvider {
             String folderName;
             final ServerData serverData = ctx.minecraft().getCurrentServer();
             if (serverData != null) {
-                folderName = ctx.minecraft().isConnectedToRealms() ? "realms" : serverData.ip;
+                folderName = serverData.ip;
             } else {
                 //replaymod causes null currentServer and false singleplayer.
                 System.out.println("World seems to be a replay. Not loading Baritone cache.");

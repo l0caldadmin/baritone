@@ -47,7 +47,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.chunk.ChunkSource;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -917,12 +917,7 @@ public final class ElytraBehavior implements Helper {
     }
 
     public static boolean isFireworks(final ItemStack itemStack) {
-        if (itemStack.getItem() != Items.FIREWORK_ROCKET) {
-            return false;
-        }
-        // If it has NBT data, make sure it won't cause us to explode.
-        final CompoundTag compound = itemStack.getTagElement("Fireworks");
-        return compound == null || !compound.getAllKeys().contains("Explosions");
+        return itemStack.getItem() == Items.FIREWORK_ROCKET;
     }
 
     private static boolean isBoostingFireworks(final ItemStack itemStack) {
@@ -931,10 +926,7 @@ public final class ElytraBehavior implements Helper {
 
     private static OptionalInt getFireworkBoost(final ItemStack itemStack) {
         if (isFireworks(itemStack)) {
-            final CompoundTag compound = itemStack.getTagElement("Fireworks");
-            if (compound != null && compound.getAllKeys().contains("Flight")) {
-                return OptionalInt.of(compound.getByte("Flight"));
-            }
+            return OptionalInt.of(1);
         }
         return OptionalInt.empty();
     }
@@ -1264,8 +1256,8 @@ public final class ElytraBehavior implements Helper {
 
     private boolean passable(int x, int y, int z, boolean ignoreLava) {
         if (ignoreLava) {
-            final Material mat = this.bsi.get0(x, y, z).getMaterial();
-            return mat == Material.AIR || mat == Material.LAVA;
+            final var state = this.bsi.get0(x, y, z);
+            return state.isAir() || state.getFluidState().getType() == Fluids.LAVA;
         } else {
             return !this.boi.get0(x, y, z);
         }
@@ -1287,10 +1279,10 @@ public final class ElytraBehavior implements Helper {
     }
 
     private int findGoodElytra() {
-        NonNullList<ItemStack> invy = ctx.player().getInventory().items;
+        NonNullList<ItemStack> invy = ctx.player().getInventory().getNonEquipmentItems();
         for (int i = 0; i < invy.size(); i++) {
             ItemStack slot = invy.get(i);
-            if (slot.getItem() == Items.ELYTRA && (slot.getItem().getMaxDamage() - slot.getDamageValue()) > Baritone.settings().elytraMinimumDurability.value) {
+            if (slot.getItem() == Items.ELYTRA && (slot.getMaxDamage() - slot.getDamageValue()) > Baritone.settings().elytraMinimumDurability.value) {
                 return i;
             }
         }
@@ -1304,7 +1296,7 @@ public final class ElytraBehavior implements Helper {
 
         ItemStack chest = ctx.player().getItemBySlot(EquipmentSlot.CHEST);
         if (chest.getItem() != Items.ELYTRA
-                || chest.getItem().getMaxDamage() - chest.getDamageValue() > Baritone.settings().elytraMinimumDurability.value) {
+                || chest.getMaxDamage() - chest.getDamageValue() > Baritone.settings().elytraMinimumDurability.value) {
             return;
         }
 

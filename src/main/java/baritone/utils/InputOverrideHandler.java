@@ -94,11 +94,11 @@ public final class InputOverrideHandler extends Behavior implements IInputOverri
         blockPlaceHelper.tick(isInputForcedDown(Input.CLICK_RIGHT));
 
         if (inControl()) {
-            if (ctx.player().input.getClass() != PlayerMovementInput.class) {
-                ctx.player().input = new PlayerMovementInput(this);
+            if (!(ctx.player().input instanceof PlayerMovementInput)) {
+                ctx.player().input = new PlayerMovementInput(this, ctx.minecraft().options);
             }
         } else {
-            if (ctx.player().input.getClass() == PlayerMovementInput.class) { // allow other movement inputs that aren't this one, e.g. for a freecam
+            if (ctx.player().input instanceof PlayerMovementInput) { // allow other movement inputs that aren't this one, e.g. for a freecam
                 ctx.player().input = new KeyboardInput(ctx.minecraft().options);
             }
         }

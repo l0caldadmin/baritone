@@ -90,7 +90,9 @@ allprojects {
         mappings {
             intermediary()
             mojmap()
-            parchment("2023.06.26")
+            if (rootProject.hasProperty("parchment_version") && rootProject.parchment_version?.toString()?.trim()) {
+                parchment(rootProject.parchment_version)
+            }
         }
     }
 

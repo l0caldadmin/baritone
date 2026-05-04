@@ -17,11 +17,16 @@
 
 package fi.dy.masa.litematica.world;
 
+import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.storage.WritableLevelData;
 
 public abstract class WorldSchematic extends Level {
     private WorldSchematic() {
-        super(null, null, null, null, null, false, false, 0, 0);
+        super((WritableLevelData) null, (ResourceKey<Level>) null, (RegistryAccess) null, (Holder<DimensionType>) null, false, false, 0L, 0);
         throw new LinkageError();
     }
 }
