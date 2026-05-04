@@ -162,18 +162,7 @@ public class MixinMinecraft {
         );
     }
 
-    @Redirect(
-            method = "tick",
-            at = @At(
-                    value = "FIELD",
-                    opcode = Opcodes.GETFIELD,
-                    target = "Lnet/minecraft/client/gui/screens/Screen;passEvents:Z"
-            )
-    )
-    private boolean passEvents(Screen screen) {
-        // allow user input is only the primary baritone
-        return (BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing() && player != null) || screen.passEvents;
-    }
+    // TODO: Screen.passEvents was removed in 1.21 — need a different approach to keep Baritone moving while a GUI is open.
 
     // TODO
     // FIXME

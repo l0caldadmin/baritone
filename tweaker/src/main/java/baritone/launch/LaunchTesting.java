@@ -18,12 +18,6 @@
 package baritone.launch;
 
 import com.google.common.base.Strings;
-import com.google.gson.GsonBuilder;
-import com.mojang.authlib.Agent;
-import com.mojang.authlib.exceptions.AuthenticationException;
-import com.mojang.authlib.properties.PropertyMap;
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
-import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import net.minecraft.launchwrapper.Launch;
 
 import java.io.File;
@@ -86,20 +80,8 @@ public class LaunchTesting {
     }
 
     private static void attemptLogin(Map<String, String> argMap, String username, String password) {
-        YggdrasilUserAuthentication auth = (YggdrasilUserAuthentication) (new YggdrasilAuthenticationService(Proxy.NO_PROXY, "1")).createUserAuthentication(Agent.MINECRAFT);
-        auth.setUsername(username);
-        auth.setPassword(password);
-
-        try {
-            auth.logIn();
-        } catch (AuthenticationException var4) {
-            throw new RuntimeException(var4);
-        }
-
-        argMap.put("accessToken", auth.getAuthenticatedToken());
-        argMap.put("uuid", auth.getSelectedProfile().getId().toString().replace("-", ""));
-        argMap.put("username", auth.getSelectedProfile().getName());
-        argMap.put("userType", auth.getUserType().getName());
-        argMap.put("userProperties", (new GsonBuilder()).registerTypeAdapter(PropertyMap.class, new PropertyMap.Serializer()).create().toJson(auth.getUserProperties()));
+        // Yggdrasil authentication was removed in newer Mojang authlib versions.
+        // Login via username/password is no longer supported in this dev environment.
+        System.err.println("[Baritone] WARNING: Username/password login is not supported in this version. Skipping login.");
     }
 }
