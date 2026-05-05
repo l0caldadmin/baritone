@@ -19,7 +19,7 @@ package baritone.api.utils.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.network.chat.Component;
@@ -51,14 +51,14 @@ public class BaritoneToast implements Toast {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, Font font, long delta) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, Font font, long delta) {
         guiGraphics.fill(0, 0, width(), height(), 0xCC2D2D2D);
 
         if (this.subtitle == null) {
-            guiGraphics.drawString(font, this.title, 8, 12, 0xFFF0F0F0);
+            guiGraphics.text(font, this.title, 8, 12, 0xFFF0F0F0);
         } else {
-            guiGraphics.drawString(font, this.title, 8, 7, 0xFFF0F0F0);
-            guiGraphics.drawString(font, this.subtitle, 8, 18, 0xFFCCCCCC);
+            guiGraphics.text(font, this.title, 8, 7, 0xFFF0F0F0);
+            guiGraphics.text(font, this.subtitle, 8, 18, 0xFFCCCCCC);
         }
     }
 

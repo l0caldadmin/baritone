@@ -18,19 +18,17 @@
 package baritone.gradle.task;
 
 import baritone.gradle.util.Determinizer;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.TaskCollection;
-import org.gradle.api.tasks.compile.ForkOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.internal.jvm.Jvm;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavaToolchainService;
-import xyz.wagyourtail.unimined.api.UniminedExtension;
-import xyz.wagyourtail.unimined.api.minecraft.MinecraftConfig;
+import org.gradle.process.ExecOperations;
+import javax.inject.Inject;
+
 
 import java.io.*;
 import java.net.URL;
@@ -47,7 +45,10 @@ import java.util.zip.ZipFile;
  * @author Brady
  * @since 10/11/2018
  */
-public class ProguardTask extends BaritoneGradleTask {
+public abstract class ProguardTask extends BaritoneGradleTask {
+
+    @Inject
+    protected abstract ExecOperations getExecOperations();
 
     @Input
     private String proguardVersion;
@@ -73,17 +74,12 @@ public class ProguardTask extends BaritoneGradleTask {
         cleanup();
     }
 
-    UniminedExtension ext = getProject().getExtensions().getByType(UniminedExtension.class);
-    SourceSetContainer sourceSets = getProject().getExtensions().getByType(SourceSetContainer.class);
-
     private File getMcJar() {
-        MinecraftConfig mcc = ext.getMinecrafts().get(sourceSets.getByName("main"));
-        return mcc.getMinecraft(mcc.getMcPatcher().getProdNamespace(), mcc.getMcPatcher().getProdNamespace()).toFile();
+        return new File(getProject().getRootProject().getRootDir(), "libs/minecraft-26.1.jar");
     }
 
     private boolean isMcJar(File f) {
-        MinecraftConfig mcc = ext.getMinecrafts().get(sourceSets.getByName("main"));
-        return mcc.isMinecraftJar(f.toPath());
+        return f.getName().startsWith("minecraft-");
     }
 
     private void processArtifact() throws Exception {
@@ -148,8 +144,7 @@ public class ProguardTask extends BaritoneGradleTask {
             {
                 // Discover all of the libraries that we will need to acquire from gradle
                 final Stream<File> dependencies = acquireDependencies()
-                        // remove MCP mapped jar, and nashorn
-                        .filter(f -> !f.toString().endsWith("-recomp.jar") && !f.getName().startsWith("nashorn") && !f.getName().startsWith("coremods"));
+                        .filter(f -> !f.getName().startsWith("nashorn") && !f.getName().startsWith("coremods"));
 
                 libraries = dependencies
                         .map(f -> isMcJar(f) ? mcJar : f);
@@ -175,7 +170,7 @@ public class ProguardTask extends BaritoneGradleTask {
     }
 
     private Stream<File> acquireDependencies() {
-        return getProject().getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().findByName("main").getCompileClasspath().getFiles()
+        return getProject().getExtensions().getByType(JavaPluginExtension.class).getSourceSets().findByName("main").getCompileClasspath().getFiles()
                 .stream()
                 .filter(File::isFile);
     }
@@ -227,7 +222,7 @@ public class ProguardTask extends BaritoneGradleTask {
 
         Path workingDirectory = getTemporaryFile("");
 
-        getProject().javaexec(spec -> {
+        getExecOperations().javaexec(spec -> {
             spec.workingDir(workingDirectory.toFile());
             spec.args("@" + workingDirectory.relativize(config));
             spec.classpath(getTemporaryFile(String.format(PROGUARD_JAR, proguardVersion)));

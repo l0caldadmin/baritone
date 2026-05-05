@@ -19,33 +19,33 @@ import baritone.gradle.task.CreateDistTask
 import baritone.gradle.task.ProguardTask
 
 plugins {
-    id "com.github.johnrengelman.shadow" version "8.0.0"
+    id "com.gradleup.shadow" version "8.3.8"
 }
 
-archivesBaseName = archivesBaseName + "-fabric"
-
-unimined.minecraft {
-    fabric {
-        loader project.fabric_version
-    }
-}
+base.archivesName = base.archivesName.get() + "-fabric"
 
 configurations {
     common
-    shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
+    shadowCommon
     compileClasspath.extendsFrom common
     runtimeClasspath.extendsFrom common
 }
 
 dependencies {
-    // because of multiple sourcesets `common project(":")` doesn't work
+    // Minecraft 26.1 — unobfuscated, direct file dep
+    implementation files("${rootProject.rootDir}/libs/minecraft-26.1.jar")
+
+    // Fabric Loader — plain jar, no Loom remapping
+    compileOnly "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+
+    // Pull all common source sets in
     for (sourceSet in rootProject.sourceSets) {
         if (sourceSet == rootProject.sourceSets.test) continue
         if (sourceSet == rootProject.sourceSets.schematica_api) continue
         common sourceSet.output
         shadowCommon sourceSet.output
     }
-    include "dev.babbaj:nether-pathfinder:${project.nether_pathfinder_version}"
+    shadowCommon "dev.babbaj:nether-pathfinder:${project.nether_pathfinder_version}"
 }
 
 processResources {
@@ -64,27 +64,18 @@ processResources {
 
 shadowJar {
     configurations = [project.configurations.shadowCommon]
-    archiveClassifier.set "dev-shadow"
+    archiveClassifier = "dev-shadow"
 }
 
-remapJar {
-    inputFile.set shadowJar.archiveFile
-    dependsOn shadowJar
-    archiveClassifier.set null
-}
-
+// 26.1: no remapping — output jar IS the final jar
 jar {
-    archiveClassifier.set "dev"
-}
-
-components.java {
-    withVariantsFromConfiguration(project.configurations.shadowRuntimeElements) {
-        skip()
-    }
+    from { configurations.common.findAll { it.exists() }.collect { it.isDirectory() ? it : zipTree(it) } }
+    archiveClassifier = null
+    dependsOn shadowJar
 }
 
 task proguard(type: ProguardTask) {
-    proguardVersion "7.4.2"
+    proguardVersion "7.9.1"
     compType "fabric"
 }
 
@@ -101,9 +92,9 @@ publishing {
             from components.java
         }
     }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
     repositories {
-        // Add repositories to publish to here.
     }
 }
+
+
+

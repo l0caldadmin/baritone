@@ -17,10 +17,9 @@
 
 allprojects {
     apply plugin: 'java'
-    apply plugin: "xyz.wagyourtail.unimined"
     apply plugin: "maven-publish"
 
-    archivesBaseName = rootProject.archives_base_name
+    base.archivesName = rootProject.archives_base_name
 
     def vers = ""
     try {
@@ -37,11 +36,9 @@ allprojects {
     }
     group = rootProject.maven_group
 
-    sourceCompatibility = targetCompatibility = JavaVersion.toVersion(project.java_version)
-    
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(sourceCompatibility.majorVersion.toInteger()))
+            languageVersion = JavaLanguageVersion.of(project.java_version.toInteger())
         }
     }
 
@@ -54,22 +51,6 @@ allprojects {
             name = 'fabric-maven'
             url = 'https://maven.fabricmc.net/'
         }
-        maven {
-            name = 'impactdevelopment-repo'
-            url = 'https://impactdevelopment.github.io/maven/'
-        }
-        maven {
-            name = "ldtteam"
-            url = "https://maven.parchmentmc.net/"
-        }
-        // for the newer version of launchwrapper
-        maven {
-            name = "multimc-maven"
-            url = "https://files.multimc.org/maven/"
-            metadataSources {
-                artifact()
-            }
-        }
         mavenCentral()
         maven {
             name = 'babbaj-repo'
@@ -80,38 +61,33 @@ allprojects {
     dependencies {
         compileOnly "org.spongepowered:mixin:${project.mixin_version}"
         compileOnly "org.ow2.asm:asm:${project.asm_version}"
+        compileOnly files("${rootProject.rootDir}/libs/minecraft-26.1.jar")
+
+        // MC 26.1 transitive deps (provided at runtime by MC)
+        compileOnly "com.google.guava:guava:33.5.0-jre"
+        compileOnly "com.google.code.gson:gson:2.13.2"
+        compileOnly "it.unimi.dsi:fastutil:8.5.18"
+        compileOnly "org.joml:joml:1.10.8"
+        compileOnly "org.slf4j:slf4j-api:2.0.17"
+        compileOnly "org.apache.commons:commons-lang3:3.19.0"
+        compileOnly "com.google.code.findbugs:jsr305:3.0.2"
+        compileOnly "com.mojang:brigadier:1.3.10"
+        compileOnly "com.mojang:datafixerupper:9.0.19"
+        compileOnly "io.netty:netty-buffer:4.2.7.Final"
+        compileOnly "io.netty:netty-common:4.2.7.Final"
+        compileOnly "io.netty:netty-transport:4.2.7.Final"
+        compileOnly "commons-io:commons-io:2.20.0"
 
         implementation "dev.babbaj:nether-pathfinder:${project.nether_pathfinder_version}"
     }
 
-    unimined.minecraft(sourceSets.main, true) {
-        version rootProject.minecraft_version
-
-        mappings {
-            intermediary()
-            mojmap()
-            if (rootProject.hasProperty("parchment_version") && rootProject.parchment_version?.toString()?.trim()) {
-                parchment(rootProject.parchment_version)
-            }
-        }
-    }
-
     tasks.withType(JavaCompile).configureEach {
         it.options.encoding = "UTF-8"
-
-        def targetVersion = project.java_version.toInteger()
-        if (JavaVersion.current().isJava9Compatible()) {
-            it.options.release = targetVersion
-        }
+        it.options.release = project.java_version.toInteger()
     }
 }
 
-unimined.minecraft {
-    runs.off = true
-    defaultRemapJar = false
-}
-
-archivesBaseName = archivesBaseName + "-common"
+base.archivesName = base.archivesName.get() + "-common"
 
 sourceSets {
     api {
@@ -155,3 +131,4 @@ javadoc {
     source = sourceSets.api.allJava
     classpath += sourceSets.api.compileClasspath
 }
+

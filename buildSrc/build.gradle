@@ -40,5 +40,5 @@ dependencies {
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.9.0'
     implementation group: 'commons-io', name: 'commons-io', version: '2.7'
 
-    implementation group: 'xyz.wagyourtail.unimined', name: 'xyz.wagyourtail.unimined.gradle.plugin', version: '1.0.5'
+    // No Unimined needed — MC 26.1 is unobfuscated, MC jar is a plain file dep
 }

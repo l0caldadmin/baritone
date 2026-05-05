@@ -17,29 +17,15 @@
 
 pluginManagement {
     repositories {
-        mavenLocal()
-        maven {
-            name = 'WagYourMaven'
-            url = 'https://maven.wagyourtail.xyz/snapshots'
-        }
-        maven {
-            name = 'ForgeMaven'
-            url = 'https://maven.minecraftforge.net/'
-        }
         maven {
             name = 'FabricMaven'
             url = 'https://maven.fabricmc.net/'
         }
         mavenCentral()
-        gradlePluginPortal() {
-            content {
-                excludeGroup "org.apache.logging.log4j"
-            }
-        }
+        gradlePluginPortal()
     }
 }
 
 rootProject.name = 'baritone'
 
-include("tweaker")
 include("fabric")
