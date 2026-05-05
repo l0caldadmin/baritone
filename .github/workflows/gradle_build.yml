@@ -31,12 +31,17 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Configure Gradle Java toolchain
+    - name: Verify Java installation
       run: |
-        echo "org.gradle.java.installations.auto-detect=false" >> gradle.properties
-        echo "org.gradle.java.installations.paths=$JAVA_HOME" >> gradle.properties
+        echo "JAVA_HOME=$JAVA_HOME"
+        java -version
+        test -f "$JAVA_HOME/jmods/java.base.jmod"
 
     - name: Build with Gradle
+      env:
+        ORG_GRADLE_JAVA_INSTALLATIONS_AUTO_DETECT: "false"
+        ORG_GRADLE_JAVA_INSTALLATIONS_PATHS: ${{ env.JAVA_HOME }}
+        ORG_GRADLE_JAVA_INSTALLATIONS_FROM_ENV: JAVA_HOME
       run: ./gradlew :fabric:build -Pmod_version="$(git describe --always --tags --first-parent | cut -c2-)"
 
     - name: Archive Artifacts
