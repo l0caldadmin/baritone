@@ -17,6 +17,7 @@
 -dontwarn org.lwjgl.**
 # also lwjgl lol
 -dontwarn module-info
+-dontwarn java.net.http.**
 # we dont have forge
 -dontwarn baritone.launch.BaritoneForgeModXD
 # progard doesn't like signature polymorphism

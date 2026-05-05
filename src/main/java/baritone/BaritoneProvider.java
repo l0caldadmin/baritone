@@ -48,6 +48,10 @@ public final class BaritoneProvider implements IBaritoneProvider {
         // Setup chat control, just for the primary instance
         final Baritone primary = (Baritone) this.createBaritone(Minecraft.getInstance());
         primary.registerBehavior(ExampleBaritoneControl::new);
+
+        // Start Puppet Server
+        baritone.llm.ConfigManager.loadOrCreate();
+        baritone.llm.PuppetServer.start();
     }
 
     @Override

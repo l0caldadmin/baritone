@@ -76,6 +76,7 @@ allprojects {
         compileOnly "io.netty:netty-buffer:4.2.7.Final"
         compileOnly "io.netty:netty-common:4.2.7.Final"
         compileOnly "io.netty:netty-transport:4.2.7.Final"
+        compileOnly "io.netty:netty-codec-http:4.2.7.Final"
         compileOnly "commons-io:commons-io:2.20.0"
 
         implementation "dev.babbaj:nether-pathfinder:${project.nether_pathfinder_version}"
