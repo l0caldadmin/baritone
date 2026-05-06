@@ -69,29 +69,29 @@ public class MixinClientPlayerEntity {
         return !baritone.getPathingBehavior().isPathing() && capabilities.mayfly;
     }
 
-    @Redirect(
-            method = "aiStep",
-            at = @At(
-                    value = "INVOKE",
-                    target = "net/minecraft/client/KeyMapping.isDown()Z"
-            )
-    )
-    private boolean isKeyDown(KeyMapping keyBinding) {
-        IBaritone baritone = BaritoneAPI.getProvider().getBaritoneForPlayer((LocalPlayer) (Object) this);
-        if (baritone == null) {
-            return keyBinding.isDown();
-        }
-        SprintStateEvent event = new SprintStateEvent();
-        baritone.getGameEventHandler().onPlayerSprintState(event);
-        if (event.getState() != null) {
-            return event.getState();
-        }
-        if (baritone != BaritoneAPI.getProvider().getPrimaryBaritone()) {
-            // hitting control shouldn't make all bots sprint
-            return false;
-        }
-        return keyBinding.isDown();
-    }
+    // @Redirect(
+    //         method = "aiStep",
+    //         at = @At(
+    //                 value = "INVOKE",
+    //                 target = "net/minecraft/client/KeyMapping.isDown()Z"
+    //         )
+    // )
+    // private boolean isKeyDown(KeyMapping keyBinding) {
+    //     IBaritone baritone = BaritoneAPI.getProvider().getBaritoneForPlayer((LocalPlayer) (Object) this);
+    //     if (baritone == null) {
+    //         return keyBinding.isDown();
+    //     }
+    //     SprintStateEvent event = new SprintStateEvent();
+    //     baritone.getGameEventHandler().onPlayerSprintState(event);
+    //     if (event.getState() != null) {
+    //         return event.getState();
+    //     }
+    //     if (baritone != BaritoneAPI.getProvider().getPrimaryBaritone()) {
+    //         // hitting control shouldn't make all bots sprint
+    //         return false;
+    //     }
+    //     return keyBinding.isDown();
+    // }
 
     @Inject(
             method = "rideTick",

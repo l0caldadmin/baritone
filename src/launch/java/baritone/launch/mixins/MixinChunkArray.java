@@ -30,29 +30,29 @@ import net.minecraft.world.level.chunk.LevelChunk;
 public abstract class MixinChunkArray implements IChunkArray {
     @Final
     @Shadow
-    AtomicReferenceArray<LevelChunk> chunks;
+    private AtomicReferenceArray<LevelChunk> chunks;
     @Final
     @Shadow
-    int chunkRadius;
+    private int chunkRadius;
 
     @Final
     @Shadow
     private int viewRange;
     @Shadow
-    int viewCenterX;
+    private volatile int viewCenterX;
     @Shadow
-    int viewCenterZ;
+    private volatile int viewCenterZ;
     @Shadow
-    int chunkCount;
+    private int chunkCount;
 
     @Shadow
-    abstract boolean inRange(int x, int z);
+    private boolean inRange(int x, int z) { return false; }
 
     @Shadow
-    abstract int getIndex(int x, int z);
+    private int getIndex(int x, int z) { return 0; }
 
     @Shadow
-    protected abstract void replace(int index, LevelChunk chunk);
+    private void replace(int index, LevelChunk chunk) {}
 
     @Override
     public int centerX() {

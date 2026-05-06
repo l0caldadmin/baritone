@@ -23,10 +23,11 @@ import baritone.api.event.events.RenderEvent;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.renderer.LevelRenderer;
-import org.joml.Matrix4f;
+import net.minecraft.client.renderer.chunk.ChunkSectionsToRender;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import org.joml.Matrix4fc;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -40,16 +41,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelRenderer.class)
 public class MixinWorldRenderer {
 
+    // MC 26.1: renderLevel signature changed — Camera + 3x Matrix4f replaced by CameraRenderState + Matrix4fc,
+    // and a new ChunkSectionsToRender parameter was added at the end.
     @Inject(
             method = "renderLevel",
             at = @At("RETURN")
     )
-    private void onRenderLevel(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean renderBlockOutline, Camera camera, Matrix4f frustrumMatrix, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, GpuBufferSlice gpuBufferSlice, Vector4f fogColor, boolean forcedCamera, CallbackInfo ci) {
+    private void onRenderLevel(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraRenderState, Matrix4fc frustumMatrix, GpuBufferSlice gpuBufferSlice, Vector4f fogColor, boolean forcedCamera, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
         float partialTicks = deltaTracker.getGameTimeDeltaPartialTick(true);
         PoseStack modelViewStack = new PoseStack();
-        modelViewStack.last().pose().set(modelViewMatrix);
+        // In 26.1, the model-view matrix is available as viewRotationMatrix on CameraRenderState
+        modelViewStack.last().pose().set(cameraRenderState.viewRotationMatrix);
         for (IBaritone ibaritone : BaritoneAPI.getProvider().getAllBaritones()) {
-            ibaritone.getGameEventHandler().onRenderPass(new RenderEvent(partialTicks, modelViewStack, projectionMatrix));
+            ibaritone.getGameEventHandler().onRenderPass(new RenderEvent(partialTicks, modelViewStack, cameraRenderState.projectionMatrix));
         }
     }
 }

@@ -66,9 +66,11 @@ public interface IRenderer {
 
     static void endLines(boolean ignoredDepth) {
         if (currentBuffer[0] != null) {
-            MeshData meshData = currentBuffer[0].buildOrThrow();
-            currentRenderType[0].draw(meshData);
-            meshData.close();
+            MeshData meshData = currentBuffer[0].build(); // build() returns null if empty, buildOrThrow() would crash
+            if (meshData != null) {
+                currentRenderType[0].draw(meshData);
+                meshData.close();
+            }
         }
         if (currentBBB[0] != null) {
             currentBBB[0].close();

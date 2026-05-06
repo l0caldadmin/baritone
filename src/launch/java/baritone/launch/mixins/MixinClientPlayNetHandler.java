@@ -74,9 +74,6 @@ public class MixinClientPlayNetHandler {
         }
     }*/
 
-    @Shadow
-    @Final
-    private Minecraft minecraft;
 
     @Inject(
             method = "sendChat(Ljava/lang/String;)V",
@@ -85,7 +82,7 @@ public class MixinClientPlayNetHandler {
     )
     private void sendChatMessage(String string, CallbackInfo ci) {
         ChatEvent event = new ChatEvent(string);
-        IBaritone baritone = BaritoneAPI.getProvider().getBaritoneForPlayer(this.minecraft.player);
+        IBaritone baritone = BaritoneAPI.getProvider().getBaritoneForPlayer(Minecraft.getInstance().player);
         if (baritone == null) {
             return;
         }

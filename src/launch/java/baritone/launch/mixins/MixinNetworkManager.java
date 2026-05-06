@@ -22,11 +22,9 @@ import baritone.api.IBaritone;
 import baritone.api.event.events.PacketEvent;
 import baritone.api.event.events.type.EventState;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import net.minecraft.network.Connection;
-import net.minecraft.network.PacketSendListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import org.spongepowered.asm.mixin.Final;
@@ -50,11 +48,12 @@ public class MixinNetworkManager {
     @Final
     private PacketFlow receiving;
 
+    // In MC 26.1, sendPacket is private. The public API is now send(Packet, ChannelFutureListener, boolean).
     @Inject(
-            method = "sendPacket",
+            method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V",
             at = @At("HEAD")
     )
-    private void preDispatchPacket(Packet<?> packet, PacketSendListener packetSendListener, CallbackInfo ci) {
+    private void preDispatchPacket(Packet<?> packet, ChannelFutureListener listener, boolean flush, CallbackInfo ci) {
         if (this.receiving != PacketFlow.CLIENTBOUND) {
             return;
         }
@@ -67,10 +66,10 @@ public class MixinNetworkManager {
     }
 
     @Inject(
-            method = "sendPacket",
+            method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V",
             at = @At("RETURN")
     )
-    private void postDispatchPacket(Packet<?> packet, PacketSendListener packetSendListener, CallbackInfo ci) {
+    private void postDispatchPacket(Packet<?> packet, ChannelFutureListener listener, boolean flush, CallbackInfo ci) {
         if (this.receiving != PacketFlow.CLIENTBOUND) {
             return;
         }

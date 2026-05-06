@@ -25,6 +25,8 @@ import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import net.minecraft.client.gui.components.CommandSuggestions;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.multiplayer.ClientSuggestionProvider;
+import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,14 +48,14 @@ public class MixinCommandSuggestionHelper {
 
     @Shadow
     @Final
-    EditBox input;
+    private EditBox input;
 
     @Shadow
     @Final
-    private List<String> commandUsage;
+    private List<FormattedCharSequence> commandUsage;
 
     @Shadow
-    private ParseResults currentParse;
+    private ParseResults<ClientSuggestionProvider> currentParse;
 
     @Shadow
     private CompletableFuture<Suggestions> pendingSuggestions;
@@ -62,7 +64,7 @@ public class MixinCommandSuggestionHelper {
     private CommandSuggestions.SuggestionsList suggestions;
 
     @Shadow
-    boolean keepSuggestions;
+    private boolean keepSuggestions;
 
     @Inject(
             method = "updateCommandInfo",

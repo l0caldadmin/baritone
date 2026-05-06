@@ -65,15 +65,15 @@ processResources {
 
 shadowJar {
     configurations = [project.configurations.shadowCommon]
-    archiveClassifier = "dev-shadow"
+    archiveClassifier = ""
+    // merge all common source outputs into the shadow jar
+    from { project.configurations.common.findAll { it.exists() }.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
-// 26.1: no remapping — output jar IS the final jar
-jar {
-    from { configurations.common.findAll { it.exists() }.collect { it.isDirectory() ? it : zipTree(it) } }
-    archiveClassifier = null
-    dependsOn shadowJar
-}
+// 26.1: disable the default jar task; shadowJar produces the primary jar
+jar.enabled = false
+build.dependsOn shadowJar
+
 
 task proguard(type: ProguardTask) {
     proguardVersion "7.9.1"

@@ -33,7 +33,7 @@ public class MixinClientChunkProvider implements IClientChunkProvider {
 
     @Final
     @Shadow
-    ClientLevel level;
+    private ClientLevel level;
 
     @Override
     public ClientChunkCache createThreadSafeCopy() {

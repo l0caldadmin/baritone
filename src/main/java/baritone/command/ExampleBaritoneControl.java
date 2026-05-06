@@ -92,9 +92,6 @@ public class ExampleBaritoneControl extends Behavior implements Helper {
             logDirect("daniel");
             return false;
         } else if (msg.trim().equalsIgnoreCase("orderpizza")) {
-            try {
-                ((IGuiScreen) ctx.minecraft().screen).openLinkInvoker(new URI("https://www.dominos.com/en/pages/order/"));
-            } catch (NullPointerException | URISyntaxException ignored) {}
             return false;
         }
         if (msg.isEmpty()) {

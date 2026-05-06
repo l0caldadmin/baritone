@@ -1,0 +1,69 @@
+.\gradlew : WARNING: A restricted method in java.lang.System has been called
+At line:1 char:1
++ .\gradlew clean :fabric:shadowJar 2>&1 | Out-File "_logs\build10.log" ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (WARNING: A rest...has been called:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an 
+unnamed module (file:/C:/Users/adam/.gradle/wrapper/dists/gradle-9.4.0-bin/lcvyxq3t37f6mx9miaydrrgs/gradle-9.4.0/lib/na
+tive-platform-0.22-milestone-29.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+> Task :buildSrc:compileJava UP-TO-DATE
+> Task :buildSrc:compileGroovy NO-SOURCE
+> Task :buildSrc:processResources NO-SOURCE
+> Task :buildSrc:classes UP-TO-DATE
+> Task :buildSrc:jar UP-TO-DATE
+
+> Configure project :
+using version number: 2.0.0
+using version number: 2.0.0
+
+> Task :clean
+> Task :fabric:clean
+
+> Task :compileApiJava
+Note: C:\Dev\_github\baritone\src\api\java\baritone\api\BaritoneAPI.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :processApiResources NO-SOURCE
+> Task :apiClasses
+> Task :compileSchematica_apiJava
+> Task :processSchematica_apiResources NO-SOURCE
+> Task :schematica_apiClasses
+
+> Task :compileJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :processResources NO-SOURCE
+> Task :classes
+
+> Task :compileLaunchJava
+Note: C:\Dev\_github\baritone\src\launch\java\baritone\launch\mixins\MixinPalettedContainer.java uses unchecked or 
+unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :processLaunchResources
+> Task :launchClasses
+> Task :fabric:compileJava NO-SOURCE
+> Task :fabric:processResources
+> Task :fabric:classes
+> Task :fabric:shadowJar
+
+[Incubating] Problems report is available at: file:///C:/Dev/_github/baritone/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.4.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 4s
+11 actionable tasks: 9 executed, 2 up-to-date
