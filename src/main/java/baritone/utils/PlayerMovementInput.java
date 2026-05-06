@@ -30,6 +30,25 @@ public class PlayerMovementInput extends KeyboardInput {
         this.handler = handler;
     }
 
-    // Input internals changed in 1.21.x; this class now acts as a lightweight marker
-    // so InputOverrideHandler can swap to a custom input implementation safely.
+    @Override
+    public void tick() {
+        // Baritone's Input enum values
+        boolean forward = handler.isInputForcedDown(baritone.api.utils.input.Input.MOVE_FORWARD);
+        boolean backward = handler.isInputForcedDown(baritone.api.utils.input.Input.MOVE_BACK);
+        boolean left = handler.isInputForcedDown(baritone.api.utils.input.Input.MOVE_LEFT);
+        boolean right = handler.isInputForcedDown(baritone.api.utils.input.Input.MOVE_RIGHT);
+        boolean jump = handler.isInputForcedDown(baritone.api.utils.input.Input.JUMP);
+        boolean shift = handler.isInputForcedDown(baritone.api.utils.input.Input.SNEAK);
+        boolean sprint = handler.isInputForcedDown(baritone.api.utils.input.Input.SPRINT);
+
+        // Update the Input record (forward, backward, left, right, jump, shift, sprint)
+        this.keyPresses = new net.minecraft.world.entity.player.Input(forward, backward, left, right, jump, shift, sprint);
+
+        // Calculate impulses
+        float forwardImpulse = (forward ? 1.0f : 0.0f) + (backward ? -1.0f : 0.0f);
+        float leftImpulse = (left ? 1.0f : 0.0f) + (right ? -1.0f : 0.0f);
+
+        // Update moveVector (Vec2 uses x for left/right impulse, y for forward/backward impulse)
+        this.moveVector = new net.minecraft.world.phys.Vec2(leftImpulse, forwardImpulse).normalized();
+    }
 }
