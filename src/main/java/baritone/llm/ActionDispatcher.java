@@ -3,9 +3,13 @@ package baritone.llm;
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalBlock;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -40,10 +44,69 @@ public class ActionDispatcher {
                         response.addProperty("message", "Started pathing to " + x + ", " + y + ", " + z);
                         break;
                     
+                    case "mc_mine":
+                        String blockName = args.get("block_id").getAsString();
+                        int quantity = args.has("quantity") ? args.get("quantity").getAsInt() : 0;
+                        BaritoneAPI.getProvider().getPrimaryBaritone().getMineProcess().mineByName(quantity, blockName);
+                        response.addProperty("status", "success");
+                        response.addProperty("message", "Started mining " + blockName);
+                        break;
+
+                    case "mc_follow":
+                        String entityType = args.get("entity_type").getAsString();
+                        BaritoneAPI.getProvider().getPrimaryBaritone().getFollowProcess().follow(entity -> {
+                            String name = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getPath();
+                            return name.equalsIgnoreCase(entityType);
+                        });
+                        response.addProperty("status", "success");
+                        response.addProperty("message", "Started following " + entityType);
+                        break;
+
+                    case "mc_explore":
+                        BaritoneAPI.getProvider().getPrimaryBaritone().getExploreProcess().explore(
+                            (int)Minecraft.getInstance().player.getX(), 
+                            (int)Minecraft.getInstance().player.getZ()
+                        );
+                        response.addProperty("status", "success");
+                        response.addProperty("message", "Started exploring.");
+                        break;
+
+                    case "mc_get_to_block":
+                        String targetBlock = args.get("block_id").getAsString();
+                        net.minecraft.resources.Identifier loc = net.minecraft.resources.Identifier.parse(targetBlock);
+                        java.util.Optional<net.minecraft.core.Holder.Reference<net.minecraft.world.level.block.Block>> holder = net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(loc);
+                        if (holder.isPresent()) {
+                            BaritoneAPI.getProvider().getPrimaryBaritone().getGetToBlockProcess().getToBlock(holder.get().value());
+                            response.addProperty("status", "success");
+                            response.addProperty("message", "Going to nearest " + targetBlock);
+                        } else {
+                            response.addProperty("status", "error");
+                            response.addProperty("message", "Unknown block: " + targetBlock);
+                        }
+                        break;
+
+                    case "mc_scan":
+                        int radius = args.has("radius") ? args.get("radius").getAsInt() : 32;
+                        com.google.gson.JsonArray entities = new com.google.gson.JsonArray();
+                        BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().entitiesStream()
+                            .filter(e -> e.distanceTo(Minecraft.getInstance().player) <= radius)
+                            .forEach(e -> {
+                                JsonObject ent = new JsonObject();
+                                ent.addProperty("type", net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()).getPath());
+                                ent.addProperty("x", e.getX());
+                                ent.addProperty("y", e.getY());
+                                ent.addProperty("z", e.getZ());
+                                ent.addProperty("id", e.getId());
+                                entities.add(ent);
+                            });
+                        response.add("entities", entities);
+                        response.addProperty("status", "success");
+                        break;
+
                     case "mc_stop":
                         BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().cancelEverything();
                         response.addProperty("status", "success");
-                        response.addProperty("message", "Stopped pathing.");
+                        response.addProperty("message", "Stopped all processes.");
                         break;
                     
                     case "mc_status":

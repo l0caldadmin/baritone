@@ -133,6 +133,30 @@ public class AutonomousClient {
                 "\"message\":{\"type\":\"string\",\"description\":\"The message to display\"}" +
                 "},\"required\":[\"message\"]}"));
 
+        tools.add(makeTool("mc_mine", "Mine a specific block type (e.g. 'oak_log', 'iron_ore')",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"block_id\":{\"type\":\"string\",\"description\":\"The block registry name, e.g. 'oak_log'\"}," +
+                "\"quantity\":{\"type\":\"integer\",\"description\":\"Optional quantity to gather\"}" +
+                "},\"required\":[\"block_id\"]}"));
+
+        tools.add(makeTool("mc_follow", "Follow a specific type of entity (e.g. 'cow', 'zombie')",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"entity_type\":{\"type\":\"string\",\"description\":\"The entity type name, e.g. 'cow'\"}" +
+                "},\"required\":[\"entity_type\"]}"));
+
+        tools.add(makeTool("mc_explore", "Start wandering and exploring the world",
+                "{\"type\":\"object\",\"properties\":{}}"));
+
+        tools.add(makeTool("mc_get_to_block", "Go to the nearest block of a specific type",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"block_id\":{\"type\":\"string\",\"description\":\"The block registry name, e.g. 'crafting_table'\"}" +
+                "},\"required\":[\"block_id\"]}"));
+
+        tools.add(makeTool("mc_scan", "Scan the surrounding area for nearby entities and blocks",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"radius\":{\"type\":\"integer\",\"description\":\"The scan radius in blocks (default 32)\"}" +
+                "}}"));
+
         return tools;
     }
 
