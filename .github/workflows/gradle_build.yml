@@ -38,14 +38,14 @@ jobs:
         java -version
         test -x "${{ steps.setup-java.outputs.path }}/bin/java"
 
-    - name: Executing tests
+    - name: Build with Gradle
       env:
         JAVA_HOME: ${{ steps.setup-java.outputs.path }}
         JAVA_OPTS: "--enable-native-access=ALL-UNNAMED"
         ORG_GRADLE_JAVA_INSTALLATIONS_AUTO_DETECT: "false"
         ORG_GRADLE_JAVA_INSTALLATIONS_PATHS: ${{ steps.setup-java.outputs.path }}
         ORG_GRADLE_JAVA_INSTALLATIONS_FROM_ENV: JAVA_HOME
-      run: ./gradlew test:fabric:build -Pmod_version="$(git describe --always --tags --first-parent | cut -c2-)"
+      run: ./gradlew :fabric:build -Pmod_version="$(git describe --always --tags --first-parent | cut -c2-)"
 
     - name: Archive Artifacts
       uses: actions/upload-artifact@v4
