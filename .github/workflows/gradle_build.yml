@@ -35,7 +35,7 @@ jobs:
       run: |
         echo "JAVA_HOME=$JAVA_HOME"
         java -version
-        test -f "$JAVA_HOME/jmods/java.base.jmod"
+        test -x "$JAVA_HOME/bin/java"
 
     - name: Build with Gradle
       env:
