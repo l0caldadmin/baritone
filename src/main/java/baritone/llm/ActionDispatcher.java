@@ -7,14 +7,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
-import baritone.api.BaritoneAPI;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 
 import baritone.api.utils.Rotation;
@@ -311,18 +309,24 @@ public class ActionDispatcher {
 
                     case "mc_settings":
                         String settingName = args.get("setting").getAsString();
-                        baritone.api.Settings settings = baritone.api.BaritoneAPI.getSettings();
+                        baritone.api.Settings settings = BaritoneAPI.getSettings();
                         try {
                             java.lang.reflect.Field field = settings.getClass().getField(settingName);
                             baritone.api.Settings.Setting<?> setting = (baritone.api.Settings.Setting<?>) field.get(settings);
                             
                             if (args.has("value")) {
                                 if (setting.value instanceof Boolean) {
-                                    ((baritone.api.Settings.Setting<Boolean>)setting).value = args.get("value").getAsBoolean();
+                                    @SuppressWarnings("unchecked")
+                                    baritone.api.Settings.Setting<Boolean> s = (baritone.api.Settings.Setting<Boolean>) setting;
+                                    s.value = args.get("value").getAsBoolean();
                                 } else if (setting.value instanceof Double) {
-                                    ((baritone.api.Settings.Setting<Double>)setting).value = args.get("value").getAsDouble();
+                                    @SuppressWarnings("unchecked")
+                                    baritone.api.Settings.Setting<Double> s = (baritone.api.Settings.Setting<Double>) setting;
+                                    s.value = args.get("value").getAsDouble();
                                 } else if (setting.value instanceof Integer) {
-                                    ((baritone.api.Settings.Setting<Integer>)setting).value = args.get("value").getAsInt();
+                                    @SuppressWarnings("unchecked")
+                                    baritone.api.Settings.Setting<Integer> s = (baritone.api.Settings.Setting<Integer>) setting;
+                                    s.value = args.get("value").getAsInt();
                                 }
                                 response.addProperty("message", "Set " + settingName + " to " + setting.value);
                             }
@@ -335,7 +339,7 @@ public class ActionDispatcher {
                         break;
 
                     case "mc_waypoints":
-                        com.google.gson.JsonArray waypoints = new com.google.gson.JsonArray();
+                        JsonArray waypoints = new JsonArray();
                         BaritoneAPI.getProvider().getPrimaryBaritone().getWorldProvider().ifWorldLoaded(world -> {
                             world.getWaypoints().getAllWaypoints().forEach(wp -> {
                                 JsonObject w = new JsonObject();

@@ -26,7 +26,6 @@ import baritone.api.utils.IPlayerContext;
 import baritone.utils.accessor.IPalettedContainer;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.IdMapper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.ChunkPos;

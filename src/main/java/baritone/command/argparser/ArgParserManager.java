@@ -34,8 +34,8 @@ public enum ArgParserManager implements IArgParserManager {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> IArgParser.Stateless<T> getParserStateless(Class<T> type) {
-        //noinspection unchecked
         return this.registry.descendingStream()
                 .filter(IArgParser.Stateless.class::isInstance)
                 .map(p -> (IArgParser.Stateless<T>) p)
@@ -45,8 +45,8 @@ public enum ArgParserManager implements IArgParserManager {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T, S> IArgParser.Stated<T, S> getParserStated(Class<T> type, Class<S> stateKlass) {
-        //noinspection unchecked
         return this.registry.descendingStream()
                 .filter(IArgParser.Stated.class::isInstance)
                 .map(p -> (IArgParser.Stated<T, S>) p)

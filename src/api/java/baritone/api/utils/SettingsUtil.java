@@ -157,13 +157,13 @@ public class SettingsUtil {
         return io.toString(setting.getType(), value);
     }
 
+    @SuppressWarnings("unchecked")
     public static String settingValueToString(Settings.Setting<?> setting) throws IllegalArgumentException {
-        //noinspection unchecked
         return settingValueToString((Settings.Setting<Object>) setting, setting.value);
     }
 
+    @SuppressWarnings("unchecked")
     public static String settingDefaultToString(Settings.Setting<?> setting) throws IllegalArgumentException {
-        //noinspection unchecked
         return settingValueToString((Settings.Setting<Object>) setting, setting.defaultValue);
     }
 
@@ -200,12 +200,15 @@ public class SettingsUtil {
             throw new IllegalStateException("No setting by that name");
         }
         Class<?> intendedType = setting.getValueClass();
+        @SuppressWarnings("unchecked")
         ISettingParser<Object> ioMethod = (ISettingParser<Object>) Parser.getParser(setting.getType());
         Object parsed = ioMethod.parse(setting.getType(), settingValue);
         if (!intendedType.isInstance(parsed)) {
             throw new IllegalStateException(ioMethod + " parser returned incorrect type, expected " + intendedType + " got " + parsed + " which is " + parsed.getClass());
         }
-        ((Settings.Setting<Object>) setting).value = parsed;
+        @SuppressWarnings("unchecked")
+        Settings.Setting<Object> s = (Settings.Setting<Object>) setting;
+        s.value = parsed;
     }
 
     private interface ISettingParser<T> {

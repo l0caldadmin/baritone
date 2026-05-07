@@ -75,7 +75,7 @@ jar.enabled = false
 build.dependsOn shadowJar
 
 
-task proguard(type: ProguardTask) {
+task proguard(type: ProguardTask, dependsOn: shadowJar) {
     proguardVersion "7.9.1"
     compType "fabric"
 }
