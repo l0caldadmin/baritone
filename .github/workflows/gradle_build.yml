@@ -39,6 +39,7 @@ jobs:
 
     - name: Build with Gradle
       env:
+        JAVA_HOME: ${{ env.JAVA_HOME }}
         ORG_GRADLE_JAVA_INSTALLATIONS_AUTO_DETECT: "false"
         ORG_GRADLE_JAVA_INSTALLATIONS_PATHS: ${{ env.JAVA_HOME }}
         ORG_GRADLE_JAVA_INSTALLATIONS_FROM_ENV: JAVA_HOME

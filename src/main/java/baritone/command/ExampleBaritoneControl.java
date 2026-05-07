@@ -33,13 +33,10 @@ import baritone.behavior.Behavior;
 import baritone.command.argument.ArgConsumer;
 import baritone.command.argument.CommandArguments;
 import baritone.command.manager.CommandManager;
-import baritone.utils.accessor.IGuiScreen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.*;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.Tuple;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
@@ -102,7 +99,7 @@ public class ExampleBaritoneControl extends Behavior implements Helper {
         String rest = msg.substring(pair.getA().length());
         ArgConsumer argc = new ArgConsumer(this.manager, pair.getB());
         if (!argc.hasAny()) {
-            Settings.Setting setting = settings.byLowerName.get(command.toLowerCase(Locale.US));
+            Settings.Setting<?> setting = settings.byLowerName.get(command.toLowerCase(Locale.US));
             if (setting != null) {
                 logRanCommand(command, rest);
                 if (setting.getValueClass() == Boolean.class) {
@@ -113,7 +110,7 @@ public class ExampleBaritoneControl extends Behavior implements Helper {
                 return true;
             }
         } else if (argc.hasExactlyOne()) {
-            for (Settings.Setting setting : settings.allSettings) {
+            for (Settings.Setting<?> setting : settings.allSettings) {
                 if (setting.isJavaOnly()) {
                     continue;
                 }
@@ -166,7 +163,7 @@ public class ExampleBaritoneControl extends Behavior implements Helper {
                             .filterPrefix(argc.getString())
                             .stream();
                 }
-                Settings.Setting setting = settings.byLowerName.get(argc.getString().toLowerCase(Locale.US));
+                Settings.Setting<?> setting = settings.byLowerName.get(argc.getString().toLowerCase(Locale.US));
                 if (setting != null && !setting.isJavaOnly()) {
                     if (setting.getValueClass() == Boolean.class) {
                         TabCompleteHelper helper = new TabCompleteHelper();

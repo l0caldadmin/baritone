@@ -125,6 +125,27 @@ public abstract class ProguardTask extends BaritoneGradleTask {
         template.add(2, "-ignorewarnings");
 
         String javaHome = getJavaLauncherForProguard().getMetadata().getInstallationPath().getAsFile().getAbsolutePath();
+        File jmodsFolder = new File(javaHome, "jmods");
+        if (!jmodsFolder.exists()) {
+            // Check for macOS structure
+            jmodsFolder = new File(javaHome, "Contents/Home/jmods");
+        }
+        if (!jmodsFolder.exists()) {
+            // Fallback to build environment JAVA_HOME
+            String envJavaHome = System.getenv("JAVA_HOME");
+            if (envJavaHome != null) {
+                File envJmods = new File(envJavaHome, "jmods");
+                if (envJmods.exists()) {
+                    javaHome = envJavaHome;
+                    jmodsFolder = envJmods;
+                }
+            }
+        }
+
+        if (!jmodsFolder.exists()) {
+            throw new RuntimeException("Could not find jmods folder in " + javaHome + " (Checked " + jmodsFolder.getAbsolutePath() + ")");
+        }
+
         template.add(2, "-libraryjars  " + javaHome + "/jmods/java.base.jmod(!**.jar;!module-info.class)");
         template.add(3, "-libraryjars  " + javaHome + "/jmods/java.desktop.jmod(!**.jar;!module-info.class)");
         template.add(4, "-libraryjars  " + javaHome + "/jmods/jdk.unsupported.jmod(!**.jar;!module-info.class)");

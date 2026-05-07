@@ -57,6 +57,7 @@ public class FollowCommand extends Command {
             group = null;
             list = args.getEnum(FollowList.class);
             while (args.hasAny()) {
+                //noinspection unchecked
                 Object gotten = args.getDatatypeFor((IDatatypeFor<Object>) list.datatype);
                 if (gotten instanceof EntityType) {
                     //noinspection unchecked
@@ -108,6 +109,7 @@ public class FollowCommand extends Command {
                 return Stream.empty();
             }
             while (args.has(2)) {
+                //noinspection unchecked
                 if (args.peekDatatypeOrNull((IDatatypeFor<Object>) followType) == null) {
                     return Stream.empty();
                 }

@@ -47,3 +47,12 @@ dependencies {
 
     // No Unimined needed — MC 26.1 is unobfuscated, MC jar is a plain file dep
 }
+
+gradlePlugin {
+    plugins {
+        baritoneBuild {
+            id = 'baritone.build'
+            implementationClass = 'baritone.gradle.BaritoneBuildPlugin'
+        }
+    }
+}

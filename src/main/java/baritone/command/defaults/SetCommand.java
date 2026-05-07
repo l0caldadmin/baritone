@@ -77,7 +77,7 @@ public class SetCommand extends Command {
         if (paginate) {
             String search = args.hasAny() && args.peekAsOrNull(Integer.class) == null ? args.getString() : "";
             args.requireMax(1);
-            List<? extends Settings.Setting> toPaginate =
+            List<? extends Settings.Setting<?>> toPaginate =
                     (viewModified ? SettingsUtil.modifiedSettings(Baritone.settings()) : Baritone.settings().allSettings).stream()
                             .filter(s -> !s.isJavaOnly())
                             .filter(s -> s.getName().toLowerCase(Locale.US).contains(search.toLowerCase(Locale.US)))
@@ -160,7 +160,7 @@ public class SetCommand extends Command {
                 if (setting.getValueClass() != Boolean.class) {
                     throw new CommandInvalidTypeException(args.consumed(), "a toggleable setting", "some other setting");
                 }
-                //noinspection unchecked
+                @SuppressWarnings("unchecked")
                 Settings.Setting<Boolean> asBoolSetting = (Settings.Setting<Boolean>) setting;
                 asBoolSetting.value ^= true;
                 logDirect(String.format(
@@ -223,7 +223,7 @@ public class SetCommand extends Command {
                     // settings always use the directory of the main Minecraft instance
                     return RelativeFile.tabComplete(args, Minecraft.getInstance().gameDirectory.toPath().resolve("baritone").toFile());
                 }
-                Settings.Setting setting = Baritone.settings().byLowerName.get(arg.toLowerCase(Locale.US));
+                Settings.Setting<?> setting = Baritone.settings().byLowerName.get(arg.toLowerCase(Locale.US));
                 if (setting != null) {
                     if (setting.getType() == Boolean.class) {
                         TabCompleteHelper helper = new TabCompleteHelper();
