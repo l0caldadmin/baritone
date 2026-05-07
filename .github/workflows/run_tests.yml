@@ -33,6 +33,8 @@ jobs:
       
     - name: Executing tests
       env:
+        JAVA_HOME: ${{ env.JAVA_HOME }}
+        JAVA_OPTS: "--enable-native-access=ALL-UNNAMED"
         ORG_GRADLE_JAVA_INSTALLATIONS_AUTO_DETECT: "false"
         ORG_GRADLE_JAVA_INSTALLATIONS_PATHS: ${{ env.JAVA_HOME }}
         ORG_GRADLE_JAVA_INSTALLATIONS_FROM_ENV: JAVA_HOME

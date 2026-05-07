@@ -133,7 +133,7 @@ public abstract class ProguardTask extends BaritoneGradleTask {
         if (!jmodsFolder.exists()) {
             // Fallback to build environment JAVA_HOME
             String envJavaHome = System.getenv("JAVA_HOME");
-            if (envJavaHome != null) {
+            if (envJavaHome != null && !envJavaHome.isEmpty()) {
                 File envJmods = new File(envJavaHome, "jmods");
                 if (envJmods.exists()) {
                     javaHome = envJavaHome;
@@ -141,9 +141,31 @@ public abstract class ProguardTask extends BaritoneGradleTask {
                 }
             }
         }
+        if (!jmodsFolder.exists()) {
+            // Fallback to the JVM running the build
+            String sysJavaHome = System.getProperty("java.home");
+            File sysJmods = new File(sysJavaHome, "jmods");
+            if (sysJmods.exists()) {
+                javaHome = sysJavaHome;
+                jmodsFolder = sysJmods;
+            }
+        }
 
         if (!jmodsFolder.exists()) {
-            throw new RuntimeException("Could not find jmods folder in " + javaHome + " (Checked " + jmodsFolder.getAbsolutePath() + ")");
+            // Absolute last resort: try to find any JDK with jmods on a Linux runner
+            File hostedToolCache = new File("/opt/hostedtoolcache/Java_Temurin_jdk/25.0.0-0/x64/jmods");
+            if (hostedToolCache.exists()) {
+                javaHome = hostedToolCache.getParentFile().getAbsolutePath();
+                jmodsFolder = hostedToolCache;
+            }
+        }
+
+        if (!jmodsFolder.exists()) {
+            throw new RuntimeException("Could not find jmods folder. Checked: \n" +
+                    "- Toolchain: " + getJavaLauncherForProguard().getMetadata().getInstallationPath().getAsFile().getAbsolutePath() + "\n" +
+                    "- JAVA_HOME: " + System.getenv("JAVA_HOME") + "\n" +
+                    "- java.home: " + System.getProperty("java.home") + "\n" +
+                    "Please ensure a full JDK with jmods is installed.");
         }
 
         template.add(2, "-libraryjars  " + javaHome + "/jmods/java.base.jmod(!**.jar;!module-info.class)");
