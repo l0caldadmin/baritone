@@ -1,6 +1,5 @@
 package baritone.llm;
 
-import baritone.api.BaritoneAPI;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;

@@ -30,6 +30,7 @@ public class PuppetServer {
     private static EventLoopGroup workerGroup;
     private static ChannelFuture channelFuture;
 
+    @SuppressWarnings("deprecation")
     public static void start() {
         ConfigManager config = ConfigManager.getInstance();
         if (!"puppet".equals(config.mode) && !"both".equals(config.mode)) {

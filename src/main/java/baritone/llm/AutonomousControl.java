@@ -16,7 +16,6 @@ public class AutonomousControl implements AbstractGameEventListener {
     private static boolean registered = false;
     private final IBaritone baritone;
     private PathEvent lastEvent = null;
-    private long lastEventTime = 0;
 
     public AutonomousControl(IBaritone baritone) {
         this.baritone = baritone;
@@ -99,9 +98,6 @@ public class AutonomousControl implements AbstractGameEventListener {
     }
 
     private net.minecraft.core.BlockPos findVillageIndicator(baritone.api.utils.IPlayerContext ctx) {
-        net.minecraft.core.BlockPos startPos = ctx.player().blockPosition();
-        baritone.utils.BlockStateInterface bsi = new baritone.utils.BlockStateInterface(ctx);
-        
         // Priority 1: Bells (highest confidence)
         net.minecraft.core.BlockPos bell = scanForBlock(ctx, "bell", 96);
         if (bell != null) return bell;

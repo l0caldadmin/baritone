@@ -58,10 +58,8 @@ public class GoalXZ implements Goal {
     }
 
     @Override
-    public double heuristic(int x, int y, int z) {//mostly copied from GoalBlock
-        int xDiff = x - this.x;
-        int zDiff = z - this.z;
-        return calculate(xDiff, zDiff);
+    public double heuristic(int x, int y, int z) {
+        return calculate(x - this.x, z - this.z);
     }
 
     @Override
@@ -112,7 +110,7 @@ public class GoalXZ implements Goal {
             diagonal = z;
         }
         diagonal *= SQRT_2;
-        return (diagonal + straight) * BaritoneAPI.getSettings().costHeuristic.value; // big TODO tune
+        return (diagonal + straight) * BaritoneAPI.getSettings().costHeuristic.value;
     }
 
     public static GoalXZ fromDirection(Vec3 origin, float yaw, double distance) {

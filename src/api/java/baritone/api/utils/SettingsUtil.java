@@ -340,7 +340,6 @@ public class SettingsUtil {
             return this.toString.apply(value);
         }
 
-        @SuppressWarnings({"rawtypes", "unchecked"})
         @Override
         public boolean accepts(Type type) {
             return type instanceof Class && this.cla$$.isAssignableFrom((Class) type);

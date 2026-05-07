@@ -22,6 +22,7 @@ import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.GoalBlock;
 import baritone.api.utils.BetterBlockPos;
 import baritone.api.utils.Helper;
+import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -64,12 +65,12 @@ public class GuiClick extends Screen implements Helper {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        double mx = mc.mouseHandler.xpos();
-        double my = mc.mouseHandler.ypos();
-
-        my = mc.getWindow().getScreenHeight() - my;
-        my *= mc.getWindow().getHeight() / (double) mc.getWindow().getScreenHeight();
-        mx *= mc.getWindow().getWidth() / (double) mc.getWindow().getScreenWidth();
+        double mx = Minecraft.getInstance().mouseHandler.xpos();
+        double my = Minecraft.getInstance().mouseHandler.ypos();
+        
+        my = Minecraft.getInstance().getWindow().getScreenHeight() - my;
+        my *= Minecraft.getInstance().getWindow().getHeight() / (double) Minecraft.getInstance().getWindow().getScreenHeight();
+        mx *= Minecraft.getInstance().getWindow().getWidth() / (double) Minecraft.getInstance().getWindow().getScreenWidth();
         Vec3 near = toWorld(mx, my, 0);
         Vec3 far = toWorld(mx, my, 1); // "Use 0.945 that's what stack overflow says" - leijurv
 
@@ -85,8 +86,6 @@ public class GuiClick extends Screen implements Helper {
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
-        double mouseX = event.x();
-        double mouseY = event.y();
         int mouseButton = event.button();
         if (currentMouseOver != null) { //Catch this, or else a click into void will result in a crash
             if (mouseButton == 0) {
@@ -123,7 +122,7 @@ public class GuiClick extends Screen implements Helper {
         this.projectionViewMatrix.invert();
 
         if (currentMouseOver != null) {
-            Entity e = mc.getCameraEntity();
+            Entity e = Minecraft.getInstance().getCameraEntity();
             // drawSingleSelectionBox WHEN?
             PathRenderer.drawManySelectionBoxes(modelViewStack, e, Collections.singletonList(currentMouseOver), Color.CYAN);
             if (clickStart != null && !clickStart.equals(currentMouseOver)) {
@@ -141,8 +140,8 @@ public class GuiClick extends Screen implements Helper {
             return null;
         }
 
-        x /= mc.getWindow().getWidth();
-        y /= mc.getWindow().getHeight();
+        x /= Minecraft.getInstance().getWindow().getWidth();
+        y /= Minecraft.getInstance().getWindow().getHeight();
         x = x * 2 - 1;
         y = y * 2 - 1;
 
