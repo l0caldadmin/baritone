@@ -189,11 +189,13 @@ public enum FasterWorldScanner implements IWorldScanner {
 
         PalettedContainer<BlockState> sectionContainer = section.getStates();
         //this won't work if the PaletteStorage is of the type EmptyPaletteStorage
-        if (((IPalettedContainer<BlockState>) sectionContainer).getStorage() == null) {
+        @SuppressWarnings("unchecked")
+        IPalettedContainer<BlockState> container = (IPalettedContainer<BlockState>) sectionContainer;
+        if (container.getStorage() == null) {
             return;
         }
 
-        Palette<BlockState> palette = ((IPalettedContainer<BlockState>) sectionContainer).getPalette();
+        Palette<BlockState> palette = container.getPalette();
 
         if (palette instanceof SingleValuePalette) {
             // single value palette doesn't have any data
@@ -219,6 +221,7 @@ public enum FasterWorldScanner implements IWorldScanner {
             return;
         }
 
+        @SuppressWarnings("unchecked")
         BitStorage array = ((IPalettedContainer<BlockState>) section.getStates()).getStorage();
         long[] longArray = array.getRaw();
         int arraySize = array.getSize();

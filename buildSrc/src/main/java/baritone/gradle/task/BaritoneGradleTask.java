@@ -20,7 +20,6 @@ package baritone.gradle.task;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
@@ -108,7 +107,7 @@ class BaritoneGradleTask extends DefaultTask {
     }
 
     protected Path getRelativeFile(String file) {
-        return Paths.get(new File(getProject().getBuildDir(), file).getAbsolutePath());
+        return getProject().getLayout().getBuildDirectory().get().getAsFile().toPath().resolve(file);
     }
 
     protected Path getRootRelativeFile(String file) {

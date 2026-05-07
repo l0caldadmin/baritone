@@ -28,13 +28,10 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.item.Items;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,8 +75,9 @@ public final class BlockOptionalMeta {
     }
 
     private static <C extends Comparable<C>, P extends Property<C>> P castToIProperty(Object value) {
-        //noinspection unchecked
-        return (P) value;
+        @SuppressWarnings("unchecked")
+        P result = (P) value;
+        return result;
     }
 
     private static Map<Property<?>, ?> parseProperties(Block block, String raw) {

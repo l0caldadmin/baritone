@@ -162,26 +162,24 @@ public class MixinMinecraft {
         );
     }
 
-    // TODO: Screen.passEvents was removed in 1.21 — need a different approach to keep Baritone moving while a GUI is open.
-
-    // TODO
-    // FIXME
-    // bradyfix
-    // i cant mixin
-    // lol
-    // https://discordapp.com/channels/208753003996512258/503692253881958400/674760939681349652
-    // https://discordapp.com/channels/208753003996512258/503692253881958400/674756457966862376
-    /*@Inject(
-            method = "rightClickMouse",
+    /**
+     * Replacement for the removed Screen.passEvents in 1.21.
+     * Redirects the screen field access in the tick loop to return null if Baritone is pathing,
+     * which allows LocalPlayer.tick() to be called even with a GUI open.
+     */
+    @Redirect(
+            method = "tick",
             at = @At(
-                    value = "INVOKE",
-                    target = "net/minecraft/client/entity/player/ClientPlayerEntity.swingArm(Lnet/minecraft/util/Hand;)V",
-                    ordinal = 1
-            ),
-            locals = LocalCapture.CAPTURE_FAILHARD
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;",
+                    opcode = Opcodes.GETFIELD,
+                    ordinal = 0
+            )
     )
-    private void onBlockUse(CallbackInfo ci, Hand var1[], int var2, int var3, Hand enumhand, ItemStack itemstack, EntityRayTraceResult rt, Entity ent, ActionResultType art, BlockRayTraceResult raytrace, int i, ActionResultType enumactionresult) {
-        // rightClickMouse is only for the main player
-        BaritoneAPI.getProvider().getPrimaryBaritone().getGameEventHandler().onBlockInteract(new BlockInteractEvent(raytrace.getPos(), BlockInteractEvent.Type.USE));
-    }*/
+    private Screen redirectScreenMovementCheck(Minecraft mc) {
+        if (mc.screen != null && BaritoneAPI.getProvider().getPrimaryBaritone().getPathingBehavior().isPathing()) {
+            return null;
+        }
+        return mc.screen;
+    }
 }

@@ -8,6 +8,8 @@
 -allowaccessmodification # anything not kept can be changed from public to private and inlined etc
 -overloadaggressively
 -dontusemixedcaseclassnames
+-ignorewarnings
+-dontwarn **
 
 # instead of renaming to a, b, c, rename to baritone.a, baritone.b, baritone.c so as to not conflict with minecraft's obfd classes
 -flattenpackagehierarchy

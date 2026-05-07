@@ -27,7 +27,7 @@ import baritone.api.command.registry.Registry;
 public enum ArgParserManager implements IArgParserManager {
     INSTANCE;
 
-    public final Registry<IArgParser> registry = new Registry<>();
+    public final Registry<IArgParser<?>> registry = new Registry<>();
 
     ArgParserManager() {
         DefaultArgParsers.ALL.forEach(this.registry::register);
@@ -38,7 +38,7 @@ public enum ArgParserManager implements IArgParserManager {
         //noinspection unchecked
         return this.registry.descendingStream()
                 .filter(IArgParser.Stateless.class::isInstance)
-                .map(IArgParser.Stateless.class::cast)
+                .map(p -> (IArgParser.Stateless<T>) p)
                 .filter(parser -> parser.getTarget().isAssignableFrom(type))
                 .findFirst()
                 .orElse(null);
@@ -49,10 +49,10 @@ public enum ArgParserManager implements IArgParserManager {
         //noinspection unchecked
         return this.registry.descendingStream()
                 .filter(IArgParser.Stated.class::isInstance)
-                .map(IArgParser.Stated.class::cast)
+                .map(p -> (IArgParser.Stated<T, S>) p)
                 .filter(parser -> parser.getTarget().isAssignableFrom(type))
                 .filter(parser -> parser.getStateType().isAssignableFrom(stateKlass))
-                .map(IArgParser.Stated.class::cast)
+                .map(p -> (IArgParser.Stated<T, S>) p)
                 .findFirst()
                 .orElse(null);
     }
@@ -84,7 +84,7 @@ public enum ArgParserManager implements IArgParserManager {
     }
 
     @Override
-    public Registry<IArgParser> getRegistry() {
+    public Registry<IArgParser<?>> getRegistry() {
         return this.registry;
     }
 }

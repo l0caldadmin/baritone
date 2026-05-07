@@ -18,7 +18,6 @@
 package baritone.launch.mixins;
 
 import baritone.utils.accessor.IPalettedContainer;
-import baritone.utils.accessor.IPalettedContainer.IData;
 import net.minecraft.util.BitStorage;
 import net.minecraft.world.level.chunk.Palette;
 import net.minecraft.world.level.chunk.PalettedContainer;
@@ -49,7 +48,7 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer<T>
         Field dataField = null;
         for (Field field : PalettedContainer.class.getDeclaredFields()) {
             Class<?> fieldType = field.getType();
-            if (IData.class.isAssignableFrom(fieldType)) {
+            if (IPalettedContainer.IData.class.isAssignableFrom(fieldType)) {
                 if ((field.getModifiers() & (Modifier.STATIC | Modifier.FINAL)) != 0 || field.isSynthetic()) {
                     continue;
                 }
@@ -69,7 +68,7 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer<T>
             // we literally are the owning class, wtf?
             throw new IllegalStateException("PalettedContainer may not access its own field?!", impossible);
         }
-        MethodType getterType = MethodType.methodType(IData.class, PalettedContainer.class);
+        MethodType getterType = MethodType.methodType(IPalettedContainer.IData.class, PalettedContainer.class);
         DATA_GETTER = MethodHandles.explicitCastArguments(rawGetter, getterType);
     }
 
@@ -84,15 +83,16 @@ public abstract class MixinPalettedContainer<T> implements IPalettedContainer<T>
     }
 
     @Unique
-    private IData<T> data() {
+    private IPalettedContainer.IData<T> data() {
         try {
             // cast to Object first so the method handle doesn't hide the interface usage from proguard
-            return (IData<T>) (Object) DATA_GETTER.invoke((PalettedContainer<T>) (Object) this);
+            return (IPalettedContainer.IData<T>) (Object) DATA_GETTER.invoke((PalettedContainer<T>) (Object) this);
         } catch (Throwable t) {
             throw sneaky(t, RuntimeException.class);
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Unique
     private static <T extends Throwable> T sneaky(Throwable t, Class<T> as) throws T {
         throw (T) t;

@@ -35,8 +35,8 @@ public final class CylinderMask extends AbstractMask implements StaticMask {
 
     public CylinderMask(int widthX, int heightY, int lengthZ, boolean filled, Direction.Axis alignment) {
         super(widthX, heightY, lengthZ);
-        this.centerA = this.getA(widthX, heightY, alignment) / 2.0;
-        this.centerB = this.getB(heightY, lengthZ, alignment) / 2.0;
+        this.centerA = getA(widthX, heightY, alignment) / 2.0;
+        this.centerB = getB(heightY, lengthZ, alignment) / 2.0;
         this.radiusSqA = (this.centerA - 1) * (this.centerA - 1);
         this.radiusSqB = (this.centerB - 1) * (this.centerB - 1);
         this.filled = filled;
@@ -45,8 +45,8 @@ public final class CylinderMask extends AbstractMask implements StaticMask {
 
     @Override
     public boolean partOfMask(int x, int y, int z) {
-        double da = Math.abs((this.getA(x, y, this.alignment) + 0.5) - this.centerA);
-        double db = Math.abs((this.getB(y, z, this.alignment) + 0.5) - this.centerB);
+        double da = Math.abs((getA(x, y, this.alignment) + 0.5) - this.centerA);
+        double db = Math.abs((getB(y, z, this.alignment) + 0.5) - this.centerB);
         if (this.outside(da, db)) {
             return false;
         }

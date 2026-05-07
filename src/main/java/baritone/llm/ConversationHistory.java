@@ -24,6 +24,13 @@ public class ConversationHistory {
         addMessage(msg);
     }
 
+    public synchronized void addSystemMessage(String content) {
+        JsonObject msg = new JsonObject();
+        msg.addProperty("role", "system");
+        msg.addProperty("content", content);
+        addMessage(msg);
+    }
+
     public synchronized void addAssistantMessage(String content, JsonArray toolCalls) {
         JsonObject msg = new JsonObject();
         msg.addProperty("role", "assistant");

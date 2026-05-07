@@ -21,16 +21,14 @@ import baritone.gradle.util.Determinizer;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.internal.jvm.Jvm;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.process.ExecOperations;
 import javax.inject.Inject;
 
-
 import java.io.*;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,8 +54,6 @@ public abstract class ProguardTask extends BaritoneGradleTask {
     public String getProguardVersion() {
         return proguardVersion;
     }
-
-    private List<String> requiredLibraries;
 
     @TaskAction
     protected void exec() throws Exception {
@@ -93,7 +89,7 @@ public abstract class ProguardTask extends BaritoneGradleTask {
     private void downloadProguard() throws Exception {
         Path proguardZip = getTemporaryFile(String.format(PROGUARD_ZIP, proguardVersion));
         if (!Files.exists(proguardZip)) {
-            write(new URL(String.format("https://github.com/Guardsquare/proguard/releases/download/v%s/proguard-%s.zip", proguardVersion, proguardVersion)).openStream(), proguardZip);
+            write(URI.create(String.format("https://github.com/Guardsquare/proguard/releases/download/v%s/proguard-%s.zip", proguardVersion, proguardVersion)).toURL().openStream(), proguardZip);
         }
     }
 
@@ -127,6 +123,7 @@ public abstract class ProguardTask extends BaritoneGradleTask {
         List<String> template = Files.readAllLines(getTemporaryFile(PROGUARD_CONFIG_DEST));
         template.add(0, "-injars '" + this.artifactPath.toString() + "'");
         template.add(1, "-outjars '" + this.getTemporaryFile(PROGUARD_EXPORT_PATH) + "'");
+        template.add(2, "-ignorewarnings");
 
         template.add(2, "-libraryjars  <java.home>/jmods/java.base.jmod(!**.jar;!module-info.class)");
         template.add(3, "-libraryjars  <java.home>/jmods/java.desktop.jmod(!**.jar;!module-info.class)");
@@ -183,25 +180,6 @@ public abstract class ProguardTask extends BaritoneGradleTask {
     private void proguardStandalone() throws Exception {
         runProguard(getTemporaryFile(compType + PROGUARD_STANDALONE_CONFIG));
         Determinizer.determinize(this.proguardOut.toString(), this.artifactStandalonePath.toString(), List.of(), false);
-    }
-
-    private static final class Pair<A, B> {
-        public final A a;
-        public final B b;
-
-        private Pair(final A a, final B b) {
-            this.a = a;
-            this.b = b;
-        }
-
-        @Override
-        public String toString() {
-            return "Pair{" +
-                    "a=" + this.a +
-                    ", " +
-                    "b=" + this.b +
-                    '}';
-        }
     }
 
     private void cleanup() {

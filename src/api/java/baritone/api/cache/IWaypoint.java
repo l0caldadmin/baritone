@@ -82,11 +82,6 @@ public interface IWaypoint {
         USER("user");
 
         /**
-         * A list of all of the
-         */
-        private static final List<Tag> TAG_LIST = Collections.unmodifiableList(Arrays.asList(Tag.values()));
-
-        /**
          * The names for the tag, anything that the tag can be referred to as.
          */
         public final String[] names;

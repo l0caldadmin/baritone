@@ -25,13 +25,13 @@ import net.minecraft.world.entity.EntityType;
 
 import java.util.stream.Stream;
 
-public enum EntityClassById implements IDatatypeFor<EntityType> {
+public enum EntityClassById implements IDatatypeFor<EntityType<?>> {
     INSTANCE;
 
     @Override
-    public EntityType get(IDatatypeContext ctx) throws CommandException {
+    public EntityType<?> get(IDatatypeContext ctx) throws CommandException {
         Identifier id = Identifier.parse(ctx.getConsumer().getString());
-        EntityType entity;
+        EntityType<?> entity;
         if ((entity = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null)) == null) {
             throw new IllegalArgumentException("no entity found by that id");
         }

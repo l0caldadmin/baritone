@@ -22,7 +22,6 @@ import baritone.api.command.exception.CommandException;
 import baritone.api.command.exception.CommandInvalidTypeException;
 import baritone.api.utils.Helper;
 
-import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -42,6 +41,7 @@ public class Paginator<E> implements Helper {
         this.entries = entries;
     }
 
+    @SafeVarargs
     public Paginator(E... entries) {
         this.entries = Arrays.asList(entries);
     }

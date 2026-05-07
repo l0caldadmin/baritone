@@ -35,7 +35,7 @@ public final class BaritoneAPI {
         SettingsUtil.readAndApply(settings, SettingsUtil.SETTINGS_DEFAULT_NAME);
 
         try {
-            provider = (IBaritoneProvider) Class.forName("baritone.BaritoneProvider").newInstance();
+            provider = (IBaritoneProvider) Class.forName("baritone.BaritoneProvider").getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException ex) {
             throw new RuntimeException(ex);
         }

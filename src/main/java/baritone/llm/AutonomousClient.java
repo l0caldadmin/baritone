@@ -10,20 +10,66 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class AutonomousClient {
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
     private static final Gson GSON = new Gson();
+    private static boolean isProcessing = false;
+    private static boolean needsAnotherTurn = false;
 
-    public static void executeTurn() {
+    static {
+        // Enforce silent settings to prevent Baritone chat spam
+        baritone.api.BaritoneAPI.getSettings().chatDebug.value = false;
+        baritone.api.BaritoneAPI.getSettings().echoCommands.value = false;
+    }
+
+    public static synchronized void onChatMessage(String sender, String message) {
+        // Filter out bot messages and system noise
+        if (sender.equals("System") || sender.equalsIgnoreCase("Baritone")) return;
+        
+        // Don't respond to ourselves if we can detect it
+        // (This depends on the sender string being accurate)
+        
+        AutonomousLogger.log("CHAT", sender + ": " + message);
+        ConversationHistory.getInstance().addUserMessage(sender + ": " + message);
+        executeTurn();
+    }
+
+    public static synchronized void executeTurn() {
+        if (isProcessing) {
+            needsAnotherTurn = true;
+            return;
+        }
+        isProcessing = true;
+        needsAnotherTurn = false;
+        
         ConfigManager cfg = ConfigManager.getInstance();
 
         // --- Build request body ---
         JsonObject body = new JsonObject();
         body.addProperty("model", cfg.model);
-        body.add("messages", ConversationHistory.getInstance().getMessagesAsJson());
+        
+        JsonArray messages = new JsonArray();
+        // Inject System Prompt
+        JsonObject systemMsg = new JsonObject();
+        systemMsg.addProperty("role", "system");
+        systemMsg.addProperty("content", "You are an autonomous AI agent controlling a Minecraft bot via Baritone. " +
+            "Your goal is to fulfill user requests by planning and executing multiple steps. " +
+            "STRATEGY: You must think step-by-step. Before gathering a resource, check your inventory (`mc_inventory`) to see if you have the necessary tools.\n" +
+            "TASK COMMITMENT: Once you start a long-running task (mc_goto, mc_mine, mc_follow, mc_explore, mc_get_to_block, mc_find_village), YOU MUST STOP and wait for an 'Event notification'. Do NOT call any more tools until the system notifies you of success, failure, or cancellation. Trust your path and commit to the journey.\n" +
+            "COMMUNICATION: Use `mc_chat` to inform the user of your plan before executing long-running tasks.\n" +
+            "RESILIENCE: If a task is canceled or fails, analyze the event notification, check your surroundings, and decide if you should retry, try a different path, or ask the user for help.");
+        messages.add(systemMsg);
+        
+        // Add existing history
+        messages.addAll(ConversationHistory.getInstance().getMessagesAsJson());
+        
+        body.add("messages", messages);
 
         if (!cfg.isOpenAI()) {
             // Ollama requires stream=false to return a single JSON response
@@ -41,35 +87,47 @@ public class AutonomousClient {
             requestBuilder.header("Authorization", "Bearer " + cfg.api_key);
         }
 
+        String requestJson = GSON.toJson(body);
+        AutonomousLogger.logRequest(requestJson);
+
         HttpRequest request = requestBuilder
-                .POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(body)))
+                .POST(HttpRequest.BodyPublishers.ofString(requestJson))
                 .build();
 
         HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenAccept(response -> {
-                    try {
-                        handleResponse(response.body(), cfg.isOpenAI());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                .thenCompose(response -> {
+                    AutonomousLogger.logResponse(response.body());
+                    return handleResponse(response.body(), cfg.isOpenAI());
                 })
-                .exceptionally(ex -> {
-                    ex.printStackTrace();
-                    return null;
+                .whenComplete((v, ex) -> {
+                    if (ex != null) {
+                        ex.printStackTrace();
+                        AutonomousLogger.log("ERROR", "Turn failed: " + ex.getMessage());
+                    }
+                    synchronized (AutonomousClient.class) {
+                        isProcessing = false;
+                        if (needsAnotherTurn) {
+                            executeTurn();
+                        }
+                    }
                 });
     }
 
-    private static void handleResponse(String responseBody, boolean isOpenAI) {
+    private static CompletableFuture<Void> handleResponse(String responseBody, boolean isOpenAI) {
         JsonObject res = JsonParser.parseString(responseBody).getAsJsonObject();
 
         JsonObject message;
         if (isOpenAI) {
             // OpenAI: { "choices": [ { "message": { ... } } ] }
-            if (!res.has("choices") || res.getAsJsonArray("choices").size() == 0) return;
+            if (!res.has("choices") || res.getAsJsonArray("choices").size() == 0) {
+                return CompletableFuture.completedFuture(null);
+            }
             message = res.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message");
         } else {
             // Ollama: { "message": { "role": "assistant", "content": "...", "tool_calls": [...] } }
-            if (!res.has("message")) return;
+            if (!res.has("message")) {
+                return CompletableFuture.completedFuture(null);
+            }
             message = res.getAsJsonObject("message");
         }
 
@@ -79,47 +137,68 @@ public class AutonomousClient {
 
         ConversationHistory.getInstance().addAssistantMessage(content, toolCalls);
 
-        if (toolCalls == null || toolCalls.size() == 0) return;
+        if (toolCalls == null || toolCalls.size() == 0) return CompletableFuture.completedFuture(null);
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        final boolean[] hasLongRunning = {false};
 
         for (JsonElement tcElement : toolCalls) {
             JsonObject toolCall = tcElement.getAsJsonObject();
             JsonObject function = toolCall.getAsJsonObject("function");
-
             String name = function.get("name").getAsString();
 
-            // OpenAI: arguments is a JSON string. Ollama: arguments is already a JsonObject.
             JsonObject args;
             JsonElement rawArgs = function.get("arguments");
             if (rawArgs.isJsonObject()) {
-                args = rawArgs.getAsJsonObject(); // Ollama
+                args = rawArgs.getAsJsonObject();
             } else {
-                args = JsonParser.parseString(rawArgs.getAsString()).getAsJsonObject(); // OpenAI
+                args = JsonParser.parseString(rawArgs.getAsString()).getAsJsonObject();
             }
 
-            // Ollama doesn't supply a tool call id — generate a stable one
             String toolCallId = (toolCall.has("id") && !toolCall.get("id").isJsonNull())
                     ? toolCall.get("id").getAsString()
                     : "tc-" + UUID.randomUUID().toString().substring(0, 8);
 
-            JsonObject dispatchPayload = new JsonObject();
-            dispatchPayload.addProperty("action", name);
-            dispatchPayload.add("args", args);
+            if (name.equals("mc_goto") || name.equals("mc_mine") || name.equals("mc_follow") || 
+                name.equals("mc_explore") || name.equals("mc_get_to_block") || name.equals("mc_find_village")) {
+                hasLongRunning[0] = true;
+            }
 
-            ActionDispatcher.dispatch(GSON.toJson(dispatchPayload)).thenAccept(dispatchRes -> {
-                ConversationHistory.getInstance().addToolMessage(toolCallId, dispatchRes);
-                executeTurn(); // recursive: let LLM react to tool result
-            });
+            futures.add(ActionDispatcher.dispatch(name, args).thenAccept(result -> {
+                ConversationHistory.getInstance().addToolMessage(toolCallId, result);
+            }));
         }
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenRun(() -> {
+                    synchronized (AutonomousClient.class) {
+                        // Only trigger another turn immediately if we DIDN'T start a long-running task.
+                        // If we did, we must wait for an external trigger (AT_GOAL, CALC_FAILED, etc.)
+                        if (!hasLongRunning[0]) {
+                            needsAnotherTurn = true;
+                        } else {
+                            baritone.api.utils.Helper.HELPER.logDirect("[Bot] Committing to task... (Turn paused)");
+                        }
+                    }
+                });
+    }
+
+    private static boolean waitingForEvent = false;
+
+    public static synchronized void onExternalTrigger(String eventDescription) {
+        AutonomousLogger.log("EVENT", eventDescription);
+        ConversationHistory.getInstance().addSystemMessage("Event notification: " + eventDescription);
+        executeTurn();
     }
 
     private static JsonArray buildTools() {
         JsonArray tools = new JsonArray();
 
-        tools.add(makeTool("mc_goto", "Walk the bot to specific coordinates",
+        tools.add(makeTool("mc_goto", "Walk the bot to specific coordinates. Returns success immediately if the path is found. You must then wait for an event notification.",
                 "{\"type\":\"object\",\"properties\":{" +
-                "\"x\":{\"type\":\"integer\",\"description\":\"X coordinate\"}," +
-                "\"y\":{\"type\":\"integer\",\"description\":\"Y coordinate\"}," +
-                "\"z\":{\"type\":\"integer\",\"description\":\"Z coordinate\"}" +
+                "\"x\":{\"type\":\"integer\"}," +
+                "\"y\":{\"type\":\"integer\"}," +
+                "\"z\":{\"type\":\"integer\"}" +
                 "},\"required\":[\"x\",\"y\",\"z\"]}"));
 
         tools.add(makeTool("mc_stop", "Stop all current pathing immediately",
@@ -128,34 +207,47 @@ public class AutonomousClient {
         tools.add(makeTool("mc_status", "Check if the bot is currently pathing to a goal",
                 "{\"type\":\"object\",\"properties\":{}}"));
 
-        tools.add(makeTool("mc_chat", "Send a visible message to the player in Minecraft chat",
+        tools.add(makeTool("mc_chat", "Send a message to the player in chat",
                 "{\"type\":\"object\",\"properties\":{" +
-                "\"message\":{\"type\":\"string\",\"description\":\"The message to display\"}" +
+                "\"message\":{\"type\":\"string\"}" +
                 "},\"required\":[\"message\"]}"));
 
-        tools.add(makeTool("mc_mine", "Mine a specific block type (e.g. 'oak_log', 'iron_ore')",
+        tools.add(makeTool("mc_mine", "Mine blocks of a specific type. Returns success when mining starts. Wait for completion event.",
                 "{\"type\":\"object\",\"properties\":{" +
-                "\"block_id\":{\"type\":\"string\",\"description\":\"The block registry name, e.g. 'oak_log'\"}," +
-                "\"quantity\":{\"type\":\"integer\",\"description\":\"Optional quantity to gather\"}" +
+                "\"block_id\":{\"type\":\"string\"}," +
+                "\"quantity\":{\"type\":\"integer\"}" +
                 "},\"required\":[\"block_id\"]}"));
 
-        tools.add(makeTool("mc_follow", "Follow a specific type of entity (e.g. 'cow', 'zombie')",
+        tools.add(makeTool("mc_follow", "Follow a specific entity. Returns success when follow starts. Wait for event.",
                 "{\"type\":\"object\",\"properties\":{" +
-                "\"entity_type\":{\"type\":\"string\",\"description\":\"The entity type name, e.g. 'cow'\"}" +
+                "\"entity_type\":{\"type\":\"string\"}" +
                 "},\"required\":[\"entity_type\"]}"));
 
-        tools.add(makeTool("mc_explore", "Start wandering and exploring the world",
+        tools.add(makeTool("mc_explore", "Start exploring. Returns success when explore starts. Wait for event.",
                 "{\"type\":\"object\",\"properties\":{}}"));
 
-        tools.add(makeTool("mc_get_to_block", "Go to the nearest block of a specific type",
+        tools.add(makeTool("mc_get_to_block", "Go to nearest block of type. Returns success when pathing starts. Wait for event.",
                 "{\"type\":\"object\",\"properties\":{" +
-                "\"block_id\":{\"type\":\"string\",\"description\":\"The block registry name, e.g. 'crafting_table'\"}" +
+                "\"block_id\":{\"type\":\"string\"}" +
                 "},\"required\":[\"block_id\"]}"));
 
-        tools.add(makeTool("mc_scan", "Scan the surrounding area for nearby entities and blocks",
+        tools.add(makeTool("mc_scan", "Scan area for entities and blocks.",
                 "{\"type\":\"object\",\"properties\":{" +
-                "\"radius\":{\"type\":\"integer\",\"description\":\"The scan radius in blocks (default 32)\"}" +
+                "\"radius\":{\"type\":\"integer\"}" +
                 "}}"));
+
+        tools.add(makeTool("mc_inventory", "List inventory items.",
+                "{\"type\":\"object\",\"properties\":{}}"));
+
+        tools.add(makeTool("mc_interact", "Interact with block at coordinates.",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"x\":{\"type\":\"integer\"}," +
+                "\"y\":{\"type\":\"integer\"}," +
+                "\"z\":{\"type\":\"integer\"}" +
+                "},\"required\":[\"x\",\"y\",\"z\"]}"));
+
+        tools.add(makeTool("mc_find_village", "Specialized search for a village. Returns success if a village marker is found. Wait for event.",
+                "{\"type\":\"object\",\"properties\":{}}"));
 
         return tools;
     }

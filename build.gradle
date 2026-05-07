@@ -80,6 +80,7 @@ allprojects {
         compileOnly "commons-io:commons-io:2.20.0"
 
         implementation "dev.babbaj:nether-pathfinder:${project.nether_pathfinder_version}"
+        testImplementation "com.mojang:authlib:6.0.54"
     }
 
     tasks.withType(JavaCompile).configureEach {

@@ -17,7 +17,6 @@
 
 package baritone.api;
 
-import baritone.api.utils.Helper;
 import baritone.api.utils.NotificationHelper;
 import baritone.api.utils.SettingsUtil;
 import baritone.api.utils.TypeUtils;
@@ -1572,7 +1571,6 @@ public final class Settings {
         private String name;
         private boolean javaOnly;
 
-        @SuppressWarnings("unchecked")
         private Setting(T value) {
             if (value == null) {
                 throw new IllegalArgumentException("Cannot determine value type class from null");
@@ -1597,8 +1595,9 @@ public final class Settings {
         }
 
         public Class<T> getValueClass() {
-            // noinspection unchecked
-            return (Class<T>) TypeUtils.resolveBaseClass(getType());
+            @SuppressWarnings("unchecked")
+            Class<T> clazz = (Class<T>) TypeUtils.resolveBaseClass(getType());
+            return clazz;
         }
 
         @Override

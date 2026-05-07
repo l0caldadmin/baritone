@@ -15,6 +15,11 @@
  * along with Baritone.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+plugins {
+    id 'java'
+    id 'groovy'
+}
+
 repositories {
     mavenLocal()
     maven {
