@@ -1,28 +1,31 @@
 .DS_Store
 **/*.swp
+*.tmp
+*.log
 
 run/
 autotest/
 dist/
 volderyarn/
+_logs/
+logs/
+mapping/
+recipes/
+scratch/
+.wrangler/
 
 # Gradle
 build/
 .gradle/
 classes/
 *.class
-
-/out
+/out/
 
 # IntelliJ Files
 .idea/
 *.iml
 *.ipr
 *.iws
-/logs/
-
-tweaker/logs/
-common/logs/
 
 # Eclipse Files
 .classpath
@@ -30,18 +33,20 @@ common/logs/
 .settings/
 baritone_Client.launch
 
+# VS Code
+.vscode/
+
+# Build artifacts and temp files
+libs/*.jar
+!libs/minecraft-26.1.2-newest.jar
+*_contents.txt
+out.txt
+minecraft_javap.txt
+
 # Copyright Files
 !/.idea/copyright/Baritone.xml
 !/.idea/copyright/profiles_settings.xml
 
-.vscode/launch.json
 .architectury-transformer
 
-
-mapping
-
-libs/lwjgl-platform-2.9.4-nightly-20150209-natives-osx.jar
-libs/java-objc-bridge-1.1.jar
-
-mapping
-_logs/
+_logs/latest.log
