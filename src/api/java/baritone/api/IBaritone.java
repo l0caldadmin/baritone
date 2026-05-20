@@ -23,6 +23,7 @@ import baritone.api.cache.IWorldProvider;
 import baritone.api.command.manager.ICommandManager;
 import baritone.api.event.listener.IEventBus;
 import baritone.api.pathing.calc.IPathingControlManager;
+import baritone.api.plugins.IPluginManager;
 import baritone.api.process.*;
 import baritone.api.selection.ISelectionManager;
 import baritone.api.utils.IInputOverrideHandler;
@@ -33,6 +34,12 @@ import baritone.api.utils.IPlayerContext;
  * @since 9/29/2018
  */
 public interface IBaritone {
+
+    /**
+     * @return The {@link IPluginManager} instance
+     * @see IPluginManager
+     */
+    IPluginManager getPluginManager();
 
     /**
      * @return The {@link IPathingBehavior} instance

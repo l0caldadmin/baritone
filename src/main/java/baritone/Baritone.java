@@ -19,6 +19,8 @@ package baritone;
 
 import baritone.api.BaritoneAPI;
 import baritone.api.IBaritone;
+import baritone.api.plugins.IPluginManager;
+
 import baritone.api.Settings;
 import baritone.api.behavior.IBehavior;
 import baritone.api.event.listener.IEventBus;
@@ -85,6 +87,8 @@ public class Baritone implements IBaritone {
 
     private final IPlayerContext playerContext;
     private final WorldProvider worldProvider;
+    private final baritone.plugins.PluginManager pluginManager;
+
 
     public BlockStateInterface bsi;
 
@@ -101,6 +105,8 @@ public class Baritone implements IBaritone {
 
         // Define this before behaviors try and get it, or else it will be null and the builds will fail!
         this.playerContext = new BaritonePlayerContext(this, mc);
+        this.pluginManager = new baritone.plugins.PluginManager(this);
+
 
         {
             this.lookBehavior         = this.registerBehavior(LookBehavior::new);
@@ -240,7 +246,13 @@ public class Baritone implements IBaritone {
     }
 
     @Override
+    public IPluginManager getPluginManager() {
+        return this.pluginManager;
+    }
+
+    @Override
     public void openClick() {
+
         new Thread(() -> {
             try {
                 Thread.sleep(100);
@@ -261,3 +273,4 @@ public class Baritone implements IBaritone {
         return threadPool;
     }
 }
+

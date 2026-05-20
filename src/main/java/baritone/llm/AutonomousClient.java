@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.net.URI;
+import java.time.Duration;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -55,16 +56,16 @@ public class AutonomousClient {
         body.addProperty("model", cfg.model);
         
         JsonArray messages = new JsonArray();
-        // Inject System Prompt
         JsonObject systemMsg = new JsonObject();
         systemMsg.addProperty("role", "system");
-        systemMsg.addProperty("content", "You are an autonomous AI agent controlling a Minecraft bot via Baritone. " +
-            "Your goal is to fulfill user requests by planning and executing multiple steps. " +
-            "STRATEGY: You must think step-by-step. Before gathering a resource, check your inventory (`mc_inventory`) to see if you have the necessary tools.\n" +
-            "TASK COMMITMENT: Once you start a long-running task (mc_goto, mc_mine, mc_follow, mc_explore, mc_get_to_block, mc_find_village), YOU MUST STOP and wait for an 'Event notification'. Do NOT call any more tools until the system notifies you of success, failure, or cancellation. Trust your path and commit to the journey.\n" +
-            "COMMUNICATION: Use `mc_chat` to inform the user of your plan before executing long-running tasks.\n" +
-            "RESILIENCE: If a task is canceled or fails, analyze the event notification, check your surroundings, and decide if you should retry, try a different path, or ask the user for help.");
+        systemMsg.addProperty("content", cfg.system_prompt);
         messages.add(systemMsg);
+        
+        // --- Inject Task Memory Context ---
+        JsonObject memoryMsg = new JsonObject();
+        memoryMsg.addProperty("role", "system");
+        memoryMsg.addProperty("content", "TASK_MEMORY (Current persistent state): " + TaskMemory.getMemoryAsContext());
+        messages.add(memoryMsg);
         
         // Add existing history
         messages.addAll(ConversationHistory.getInstance().getMessagesAsJson());
@@ -91,6 +92,7 @@ public class AutonomousClient {
         AutonomousLogger.logRequest(requestJson);
 
         HttpRequest request = requestBuilder
+                .timeout(Duration.ofSeconds(10))
                 .POST(HttpRequest.BodyPublishers.ofString(requestJson))
                 .build();
 
@@ -160,7 +162,9 @@ public class AutonomousClient {
                     : "tc-" + UUID.randomUUID().toString().substring(0, 8);
 
             if (name.equals("mc_goto") || name.equals("mc_mine") || name.equals("mc_follow") || 
-                name.equals("mc_explore") || name.equals("mc_get_to_block") || name.equals("mc_find_village")) {
+                name.equals("mc_explore") || name.equals("mc_get_to_block") || name.equals("mc_find_village") ||
+                name.equals("mc_get_to_entity") || name.equals("mc_hunt") || name.equals("mc_gather_items") ||
+                name.equals("mc_altoclef") || name.equals("mc_craft") || name.equals("mc_build")) {
                 hasLongRunning[0] = true;
             }
 
@@ -246,8 +250,42 @@ public class AutonomousClient {
                 "\"z\":{\"type\":\"integer\"}" +
                 "},\"required\":[\"x\",\"y\",\"z\"]}"));
 
-        tools.add(makeTool("mc_find_village", "Specialized search for a village. Returns success if a village marker is found. Wait for event.",
+        tools.add(makeTool("mc_hunt", "Find, path to, and attack entities of a specific type until the specified quantity is dead. Also collects drops.",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"entity_type\":{\"type\":\"string\"}," +
+                "\"quantity\":{\"type\":\"integer\"}" +
+                "},\"required\":[\"entity_type\"]}"));
+
+        tools.add(makeTool("mc_gather_items", "Find and collect all dropped items on the ground within a radius.",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"radius\":{\"type\":\"integer\"}" +
+                "}}"));
+
+        tools.add(makeTool("mc_craft", "Craft an item using a recipe. If a crafting table is needed and not nearby, it will report failure.",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"item_id\":{\"type\":\"string\"}," +
+                "\"quantity\":{\"type\":\"integer\"}" +
+                "},\"required\":[\"item_id\"]}"));
+
+        tools.add(makeTool("mc_build", "Build a structure from a schematic file. File must be in the schematics folder.",
+                "{\"type\":\"object\",\"properties\":{" +
+                "\"schematic\":{\"type\":\"string\"}," +
+                "\"x\":{\"type\":\"integer\"}," +
+                "\"y\":{\"type\":\"integer\"}," +
+                "\"z\":{\"type\":\"integer\"}" +
+                "},\"required\":[\"schematic\"]}"));
+
+        tools.add(makeTool("mc_schematic_list", "List all available schematic files in the schematics folder.",
                 "{\"type\":\"object\",\"properties\":{}}"));
+
+        try {
+            Class.forName("baritone.llm.AltoClefBridge");
+            tools.add(makeTool("mc_altoclef", "Execute a high-level AltoClef task (e.g., 'diamonds', 'beat_game', 'food'). Returns success when task starts. Wait for event.",
+                    "{\"type\":\"object\",\"properties\":{" +
+                    "\"task\":{\"type\":\"string\"}," +
+                    "\"count\":{\"type\":\"integer\"}" +
+                    "},\"required\":[\"task\"]}"));
+        } catch (Exception ignored) {}
 
         return tools;
     }

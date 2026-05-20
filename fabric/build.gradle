@@ -32,8 +32,8 @@ configurations {
 }
 
 dependencies {
-    // Minecraft 26.1 — unobfuscated, direct file dep
-    implementation files("${rootProject.rootDir}/libs/minecraft-26.1.jar")
+    // Minecraft 26.1.2 — unobfuscated, direct file dep
+    implementation files("${rootProject.rootDir}/libs/minecraft-26.1.2-newest.jar")
 
     // Fabric Loader — plain jar, no Loom remapping
     compileOnly "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
@@ -66,8 +66,21 @@ processResources {
 shadowJar {
     configurations = [project.configurations.shadowCommon]
     archiveClassifier = ""
+    from sourceSets.main.output
     // merge all common source outputs into the shadow jar
     from { project.configurations.common.findAll { it.exists() }.collect { it.isDirectory() ? it : zipTree(it) } }
+    exclude "baritone/llm/AltoClefBridge.class" // Exclude from main build
+    mergeServiceFiles()
+}
+
+task shadowJarAltoclef(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    configurations = [project.configurations.shadowCommon]
+    archiveBaseName = rootProject.archives_base_name + "-altoclef"
+    archiveClassifier = ""
+    from sourceSets.main.output
+    from { project.configurations.common.findAll { it.exists() }.collect { it.isDirectory() ? it : zipTree(it) } }
+    from rootProject.sourceSets.altoclef.output
+    mergeServiceFiles()
 }
 
 // 26.1: disable the default jar task; shadowJar produces the primary jar

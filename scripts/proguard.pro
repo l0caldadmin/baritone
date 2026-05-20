@@ -19,7 +19,7 @@
 -dontwarn org.lwjgl.**
 # also lwjgl lol
 -dontwarn module-info
--dontwarn java.net.http.**
+# -dontwarn java.net.http.** # removed in task 1.1 cleanup
 # we dont have forge
 -dontwarn baritone.launch.BaritoneForgeModXD
 # progard doesn't like signature polymorphism
@@ -27,6 +27,13 @@
 
 # please do not change the comment below
 -keep class baritone.api.** { *; } # this is the keep api
+-keepnames class baritone.api.** { *; }
+
+# Keep LLM components for the bridge and puppet mode
+-keep class baritone.llm.** { *; }
+
+# Netty is required for the PuppetServer WebSocket
+-keep class io.netty.** { *; }
 
 # service provider needs these class names
 -keep class baritone.BaritoneProvider

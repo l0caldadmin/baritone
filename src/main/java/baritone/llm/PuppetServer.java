@@ -56,12 +56,19 @@ public class PuppetServer {
              .option(ChannelOption.SO_BACKLOG, 128)
              .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            channelFuture = b.bind(port).sync();
-            System.out.println("Baritone PuppetServer started on port " + port);
+            channelFuture = b.bind(port).addListener(future -> {
+                if (future.isSuccess()) {
+                    System.out.println("Baritone PuppetServer started on port " + port);
+                } else {
+                    System.err.println("Baritone PuppetServer failed to start on port " + port + ": " + future.cause().getMessage());
+                    stop();
+                }
+            });
 
             Runtime.getRuntime().addShutdownHook(new Thread(PuppetServer::stop));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Failed to initialize Baritone PuppetServer groups: " + e.getMessage());
+            stop();
         }
     }
 
@@ -189,6 +196,7 @@ public class PuppetServer {
                    "        .status-item { display: flex; align-items: center; gap: 8px; }\n" +
                    "        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #3f3f46; }\n" +
                    "        .status-dot.active { background: var(--success); box-shadow: 0 0 8px var(--success); }\n" +
+                   "        .status-dot.warning { background: var(--warning); box-shadow: 0 0 8px var(--warning); }\n" +
                    "        \n" +
                    "        /* Inventory Grid */\n" +
                    "        .inv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 8px; }\n" +
@@ -196,6 +204,11 @@ public class PuppetServer {
                    "        .inv-item:hover { border-color: var(--accent); transform: scale(1.05); }\n" +
                    "        .inv-count { position: absolute; bottom: 2px; right: 4px; font-size: 10px; font-weight: 800; color: white; text-shadow: 1px 1px 0 black; }\n" +
                    "        .inv-icon { font-size: 20px; }\n" +
+                   "        \n" +
+                   "        /* Task Progress Bar */\n" +
+                   "        .task-progress-container { flex: 1; margin: 0 24px; display: flex; flex-direction: column; gap: 4px; }\n" +
+                   "        .task-progress-bar { height: 4px; background: #27272a; border-radius: 2px; overflow: hidden; }\n" +
+                   "        .task-progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.5s ease; }\n" +
                    "    </style>\n" +
                    "</head>\n" +
                    "<body>\n" +
@@ -241,11 +254,37 @@ public class PuppetServer {
                    "            </section>\n" +
                    "\n" +
                    "            <section>\n" +
+                   "                <h2>Schematic Builder</h2>\n" +
+                   "                <div class='control-stack'>\n" +
+                   "                    <div style='display: flex; gap: 8px;'>\n" +
+                   "                        <select id='schematic-select' style='background: #09090b; border: 1px solid var(--border); color: white; padding: 10px 12px; border-radius: 8px; font-size: 0.875rem; flex: 1;'>\n" +
+                   "                            <option value=''>Loading...</option>\n" +
+                   "                        </select>\n" +
+                   "                        <button class='btn btn-secondary btn-sm' onclick='refreshSchematics()'>🔄</button>\n" +
+                   "                    </div>\n" +
+                   "                    <button class='btn' onclick='doBuild()'>Build at Current Pos</button>\n" +
+                   "                </div>\n" +
+                   "            </section>\n" +
+                   "\n" +
+                   "            <section>\n" +
                    "                <h2>Mining & Resources</h2>\n" +
                    "                <div class='control-stack'>\n" +
-                   "                    <input id='mine-id' placeholder='Block ID (e.g. iron_ore)'>\n" +
-                   "                    <button class='btn' onclick=\"sendCommand('mc_mine', {block_id: document.getElementById('mine-id').value})\">Mine All Occurrences</button>\n" +
-                   "                    <button class='btn btn-secondary' onclick=\"sendCommand('mc_get_to_block', {block_id: document.getElementById('mine-id').value})\">Locate Nearest</button>\n" +
+                   "                    <div style='display: flex; gap: 8px;'>\n" +
+                   "                        <input id='mine-id' placeholder='iron_ore' style='flex:1'>\n" +
+                   "                        <input id='mine-qty' type='number' value='1' style='width: 60px;'>\n" +
+                   "                    </div>\n" +
+                   "                    <button class='btn' onclick=\"sendCommand('mc_mine', {block_id: document.getElementById('mine-id').value, quantity: parseInt(document.getElementById('mine-qty').value)})\">Start Mining</button>\n" +
+                   "                </div>\n" +
+                   "            </section>\n" +
+                   "\n" +
+                   "            <section>\n" +
+                   "                <h2>Crafting & Recipes</h2>\n" +
+                   "                <div class='control-stack'>\n" +
+                   "                    <div style='display: flex; gap: 8px;'>\n" +
+                   "                        <input id='craft-id' placeholder='pickaxe' style='flex:1'>\n" +
+                   "                        <input id='craft-qty' type='number' value='1' style='width: 60px;'>\n" +
+                   "                    </div>\n" +
+                   "                    <button class='btn btn-secondary' onclick=\"sendCommand('mc_craft', {item_id: document.getElementById('craft-id').value, quantity: parseInt(document.getElementById('craft-qty').value)})\">Craft Item</button>\n" +
                    "                </div>\n" +
                    "            </section>\n" +
                    "\n" +
@@ -287,12 +326,15 @@ public class PuppetServer {
                    "                    <div id='status-dot' class='status-dot'></div>\n" +
                    "                    STATUS: <b id='status-text' style='color: white'>IDLE</b>\n" +
                    "                </div>\n" +
-                   "                <div class='status-item'>\n" +
-                   "                    TASK: <b id='task-text' style='color: var(--accent)'>NONE</b>\n" +
-                   "                    <span id='phase-wrap' style='display:none'>&nbsp;[&nbsp;<b id='phase-text'>SEARCHING</b>&nbsp;]</span>\n" +
+                   "                <div class='task-progress-container' id='task-progress-container' style='display:none'>\n" +
+                   "                    <div style='display: flex; justify-content: space-between; font-size: 10px;'>\n" +
+                   "                        <span id='task-name-display'>NONE</span>\n" +
+                   "                        <span id='task-count-display'>0 / 0</span>\n" +
+                   "                    </div>\n" +
+                   "                    <div class='task-progress-bar'><div id='task-progress-fill' class='task-progress-fill'></div></div>\n" +
                    "                </div>\n" +
-                   "                <div id='target-wrap' class='status-item' style='display:none'>\n" +
-                   "                    TARGET: <b id='target-text' style='color: white'>0, 0, 0</b>\n" +
+                   "                <div class='status-item'>\n" +
+                   "                    PHASE: <b id='phase-text' style='color: var(--accent)'>IDLE</b>\n" +
                    "                </div>\n" +
                    "            </div>\n" +
                    "        </div>\n" +
@@ -402,6 +444,30 @@ public class PuppetServer {
                    "            if (!isNaN(x) && !isNaN(y) && !isNaN(z)) sendCommand('mc_goto', {x, y, z});\n" +
                    "        }\n" +
                    "\n" +
+                   "        async function refreshSchematics() {\n" +
+                   "            const data = await sendCommand('mc_schematic_list', {});\n" +
+                   "            if (data.status === 'success') {\n" +
+                   "                const sel = document.getElementById('schematic-select');\n" +
+                   "                sel.innerHTML = '';\n" +
+                   "                if (data.schematics.length === 0) {\n" +
+                   "                    sel.innerHTML = '<option value=\"\">No schematics found</option>';\n" +
+                   "                } else {\n" +
+                   "                    data.schematics.forEach(s => {\n" +
+                   "                        const opt = document.createElement('option');\n" +
+                   "                        opt.value = s;\n" +
+                   "                        opt.innerText = s;\n" +
+                   "                        sel.appendChild(opt);\n" +
+                   "                    });\n" +
+                   "                }\n" +
+                   "            }\n" +
+                   "        }\n" +
+                   "\n" +
+                   "        function doBuild() {\n" +
+                   "            const schematic = document.getElementById('schematic-select').value;\n" +
+                   "            if (schematic) sendCommand('mc_build', { schematic });\n" +
+                   "        }\n" +
+                   "\n" +
+                   "\n" +
                    "        async function poll() {\n" +
                    "            const data = await sendCommand('mc_status', {});\n" +
                    "            if (!data) return;\n" +
@@ -418,27 +484,26 @@ public class PuppetServer {
                    "            \n" +
                    "            // Update Status Strip\n" +
                    "            const active = data.active_task !== 'none';\n" +
-                   "            document.getElementById('status-dot').className = data.is_pathing ? 'status-dot active' : 'status-dot';\n" +
-                   "            document.getElementById('status-text').innerText = data.is_pathing ? 'PATHING' : (active ? 'ACTIVE' : 'IDLE');\n" +
-                   "            document.getElementById('status-text').style.color = data.is_pathing ? 'var(--success)' : (active ? 'var(--warning)' : 'white');\n" +
+                   "            const paused = data.is_paused === true;\n" +
+                   "            document.getElementById('status-dot').className = data.is_pathing ? 'status-dot active' : (paused ? 'status-dot warning' : 'status-dot');\n" +
+                   "            document.getElementById('status-text').innerText = data.is_pathing ? 'PATHING' : (paused ? 'PAUSED' : (active ? 'ACTIVE' : 'IDLE'));\n" +
+                   "            document.getElementById('status-text').style.color = data.is_pathing ? 'var(--success)' : (paused ? 'var(--warning)' : (active ? 'var(--warning)' : 'white'));\n" +
                    "            \n" +
-                   "            document.getElementById('task-text').innerText = data.active_task.toUpperCase();\n" +
-                   "            if (active) {\n" +
-                   "                document.getElementById('phase-wrap').style.display = 'inline';\n" +
-                   "                document.getElementById('phase-text').innerText = data.task_phase;\n" +
-                   "            } else {\n" +
-                   "                document.getElementById('phase-wrap').style.display = 'none';\n" +
-                   "            }\n" +
+                   "            document.getElementById('phase-text').innerText = data.task_phase;\n" +
                    "            \n" +
-                   "            if (data.target) {\n" +
-                   "                document.getElementById('target-wrap').style.display = 'flex';\n" +
-                   "                document.getElementById('target-text').innerText = `${data.target.x}, ${data.target.y}, ${data.target.z}`;\n" +
+                   "            // Update Progress Bar\n" +
+                   "            const progContainer = document.getElementById('task-progress-container');\n" +
+                   "            if (active && data.quantity_target > 0) {\n" +
+                   "                progContainer.style.display = 'flex';\n" +
+                   "                document.getElementById('task-name-display').innerText = data.active_task.toUpperCase();\n" +
+                   "                document.getElementById('task-count-display').innerText = `${data.quantity_current} / ${data.quantity_target}`;\n" +
+                   "                const pct = (data.quantity_current / data.quantity_target) * 100;\n" +
+                   "                document.getElementById('task-progress-fill').style.width = pct + '%';\n" +
                    "            } else {\n" +
-                   "                document.getElementById('target-wrap').style.display = 'none';\n" +
+                   "                progContainer.style.display = 'none';\n" +
                    "            }\n" +
                    "        }\n" +
                    "        \n" +
-                   "        // Sync settings on load\n" +
                    "        async function syncSettings() {\n" +
                    "            for (let s of ['allowBreak', 'allowPlace', 'allowSprint']) {\n" +
                    "                const data = await sendCommand('mc_settings', { setting: s });\n" +
@@ -454,6 +519,7 @@ public class PuppetServer {
                    "            syncSettings();\n" +
                    "            sendCommand('mc_inventory', {});\n" +
                    "            sendCommand('mc_waypoints', {});\n" +
+                   "            refreshSchematics();\n" +
                    "        }, 500);\n" +
                    "    </script>\n" +
                    "</body>\n" +

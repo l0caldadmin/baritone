@@ -39,6 +39,18 @@ public class ConfigManager {
     /** Port for the puppet WebSocket server. */
     public int puppet_port = 9375;
 
+    /** Base URL for recipe static assets and metrics. */
+    public String recipe_cdn_url = "https://cdn.baritone-llm.com/recipes/";
+
+    /** The system prompt sent to the LLM to define its behavior and tool usage. */
+    public String system_prompt = "You are an autonomous AI agent controlling a Minecraft bot via Baritone. " +
+            "Your goal is to fulfill user requests by planning and executing multiple steps. " +
+            "STRATEGY: You must think step-by-step. Before gathering a resource, check your inventory (`mc_inventory`) to see if you have the necessary tools.\n" +
+            "TASK_MEMORY: You are provided with a `TASK_MEMORY` JSON block. This is your persistent memory. If an `active_task` is present, you MUST prioritize completing it before starting new ones unless the user explicitly redirects you.\n" +
+            "TASK COMMITMENT: Once you start a long-running task (mc_goto, mc_mine, mc_follow, mc_explore, mc_get_to_block, mc_find_village), YOU MUST STOP and wait for an 'Event notification'. Do NOT call any more tools until the system notifies you of success, failure, or cancellation. Trust your path and commit to the journey.\n" +
+            "COMMUNICATION: Use `mc_chat` to inform the user of your plan before executing long-running tasks.\n" +
+            "RESILIENCE: If a task is canceled or fails, analyze the event notification, check your surroundings, and decide if you should retry, try a different path, or ask the user for help.";
+
     // ---------------------------------------------------------------
 
     private static ConfigManager INSTANCE;
@@ -57,6 +69,7 @@ public class ConfigManager {
         if (configFile.exists()) {
             try (FileReader reader = new FileReader(configFile)) {
                 INSTANCE = gson.fromJson(reader, ConfigManager.class);
+                RecipeService.setBaseUrl(INSTANCE.recipe_cdn_url);
                 return INSTANCE;
             } catch (Exception e) {
                 e.printStackTrace();

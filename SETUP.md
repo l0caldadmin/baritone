@@ -11,13 +11,13 @@ Releases are made rarely and are not always up to date with the latest features 
 Link to the releases page: [Releases](https://github.com/cabaletta/baritone/releases)
 
 The mapping between Minecraft versions and major Baritone versions is as follows
-| Minecraft version | 1.12 | 1.13 | 1.14 | 1.15 | 1.16 | 1.17 | 1.18 | 1.19 | 1.20  | 1.21  | 1.21.4 | 1.21.5 |  1.21.6 - 1.21.8 |
-|-------------------|------|------|------|------|------|------|------|------|-------|-------|--------|--------|------------------|
-| Baritone version  | v1.2 | v1.3 | v1.4 | v1.5 | v1.6 | v1.7 | v1.8 | v1.9 | v1.10 | v1.11 | v1.13  | v1.14  | v1.15            |
+| Minecraft version | 1.12 | 1.13 - 1.20 | 1.21  | 1.21.4 | 1.21.5 | 1.21.6 - 1.21.8 | 26.1.2+ |
+|-------------------|------|-------------|-------|--------|--------|------------------|---------|
+| Baritone version  | v1.2 | v1.3 - v1.9 | v1.11 | v1.13  | v1.14  | v1.15            | v2.0.0  |
 
 Any official release will be GPG signed by leijurv (44A3EA646EADAC6A). Please verify that the hash of the file you download is in `checksums.txt` and that `checksums_signed.asc` is a valid signature by that public keys of `checksums.txt`. 
 
-The build is fully deterministic and reproducible, and you can verify that by running `docker build --no-cache -t cabaletta/baritone .` yourself and comparing the shasum. This works identically on Travis, Mac, and Linux (if you have docker on Windows, I'd be grateful if you could let me know if it works there too).
+The build is fully deterministic and reproducible, and you can verify that by running `docker build --no-cache -t cabaletta/baritone .` yourself and comparing the shasum. This works identically on GitHub Actions, Mac, and Linux.
 
 
 ## Artifacts
@@ -57,6 +57,7 @@ The recommended Java versions by Minecraft version are
 | 1.17.1                        | 16            |
 | 1.18.2 - 1.20.4               | 17            |
 | 1.20.5 - 1.21.8               | 21            |
+| 26.1.2+                       | 25            |
 
 Download java: https://adoptium.net/
 
@@ -64,20 +65,18 @@ To check which java version you are using do `java -version` in a command prompt
 
 ### Building Baritone
 
-These tasks depend on the minecraft version, but are (for the most part) standard for building mods.
+To build Baritone, use the provided Gradle wrapper. This will generate the Fabric mod jar and common API jars.
 
-For more details, see [the build ci action](/.github/workflows/gradle_build.yml) of the branch you want to build.
+```bash
+./gradlew build
+```
 
-For most branches `gradlew build` should build everything, but there are exceptions and this file might be out of date.
-
-More specifically, on older branches the setup used to be that `gradlew build` builds the tweaker jar
-and additional branch-specific flags were needed for loader builds. You might also have to run
-`setupDecompWorkspace` first.
+The resulting jars will be in `build/libs` and `fabric/build/libs`.
 
 ## IntelliJ
 - Open the project in IntelliJ as a Gradle project
-- Refresh the Gradle project (or, to be safe, just restart IntelliJ)
-- Depending on the minecraft version, you may need to run `setupDecompWorkspace` or `genIntellijRuns` in order to get everything working
+- Refresh the Gradle project
+- Run the `genSources` task if needed for Minecraft source access.
 
 ## Github Actions
 Most branches have a CI workflow at `.github/workflows/gradle_build.yml`. If you fork this repository and enable actions for your fork

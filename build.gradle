@@ -61,9 +61,9 @@ allprojects {
     dependencies {
         compileOnly "org.spongepowered:mixin:${project.mixin_version}"
         compileOnly "org.ow2.asm:asm:${project.asm_version}"
-        compileOnly files("${rootProject.rootDir}/libs/minecraft-26.1.jar")
+        compileOnly files("${rootProject.rootDir}/libs/minecraft-26.1.2-newest.jar")
 
-        // MC 26.1 transitive deps (provided at runtime by MC)
+        // MC 26.1.2 transitive deps (provided at runtime by MC)
         compileOnly "com.google.guava:guava:33.5.0-jre"
         compileOnly "com.google.code.gson:gson:2.13.2"
         compileOnly "it.unimi.dsi:fastutil:8.5.18"
@@ -113,6 +113,10 @@ sourceSets {
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.runtimeClasspath
     }
+    altoclef {
+        compileClasspath += main.compileClasspath + main.runtimeClasspath + main.output
+        runtimeClasspath += main.compileClasspath + main.runtimeClasspath + main.output
+    }
     main {
         compileClasspath += schematica_api.output
         runtimeClasspath += schematica_api.output
@@ -128,7 +132,7 @@ jar {
 }
 
 javadoc {
-    options.addStringOption('Xwerror', '-quiet') // makes the build fail on travis when there is a javadoc error
+    options.addStringOption('Xwerror', '-quiet') // makes the build fail on CI when there is a javadoc error
     options.linkSource true
     options.encoding "UTF-8" // allow emoji in comments :^)
     source = sourceSets.api.allJava

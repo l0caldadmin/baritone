@@ -41,7 +41,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(LevelRenderer.class)
 public class MixinWorldRenderer {
 
-    // MC 26.1: renderLevel signature changed — Camera + 3x Matrix4f replaced by CameraRenderState + Matrix4fc,
+    // MC 26.1.2: renderLevel signature changed — Camera + 3x Matrix4f replaced by CameraRenderState + Matrix4fc,
     // and a new ChunkSectionsToRender parameter was added at the end.
     @Inject(
             method = "renderLevel",
@@ -50,7 +50,7 @@ public class MixinWorldRenderer {
     private void onRenderLevel(GraphicsResourceAllocator allocator, DeltaTracker deltaTracker, boolean renderBlockOutline, CameraRenderState cameraRenderState, Matrix4fc frustumMatrix, GpuBufferSlice gpuBufferSlice, Vector4f fogColor, boolean forcedCamera, ChunkSectionsToRender chunkSectionsToRender, CallbackInfo ci) {
         float partialTicks = deltaTracker.getGameTimeDeltaPartialTick(true);
         PoseStack modelViewStack = new PoseStack();
-        // In 26.1, the model-view matrix is available as viewRotationMatrix on CameraRenderState
+        // In 26.1.2, the model-view matrix is available as viewRotationMatrix on CameraRenderState
         modelViewStack.last().pose().set(cameraRenderState.viewRotationMatrix);
         for (IBaritone ibaritone : BaritoneAPI.getProvider().getAllBaritones()) {
             ibaritone.getGameEventHandler().onRenderPass(new RenderEvent(partialTicks, modelViewStack, cameraRenderState.projectionMatrix));

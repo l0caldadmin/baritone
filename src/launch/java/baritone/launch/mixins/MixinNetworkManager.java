@@ -48,7 +48,7 @@ public class MixinNetworkManager {
     @Final
     private PacketFlow receiving;
 
-    // In MC 26.1, sendPacket is private. The public API is now send(Packet, ChannelFutureListener, boolean).
+    // In MC 26.1.2, sendPacket is private. The public API is now send(Packet, ChannelFutureListener, boolean).
     @Inject(
             method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;Z)V",
             at = @At("HEAD")

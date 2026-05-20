@@ -120,9 +120,9 @@ public abstract class ProguardTask extends BaritoneGradleTask {
 
         // Setup the template that will be used to derive the API and Standalone configs
         List<String> template = Files.readAllLines(getTemporaryFile(PROGUARD_CONFIG_DEST));
-        template.add(0, "-injars '" + this.artifactPath.toString() + "'");
-        template.add(1, "-outjars '" + this.getTemporaryFile(PROGUARD_EXPORT_PATH) + "'");
-        template.add(2, "-ignorewarnings");
+        template.add("-injars '" + this.artifactPath.toString() + "'");
+        template.add("-outjars '" + this.getTemporaryFile(PROGUARD_EXPORT_PATH) + "'");
+        template.add("-ignorewarnings");
 
         String javaHome = getJavaLauncherForProguard().getMetadata().getInstallationPath().getAsFile().getAbsolutePath();
         File jmodsFolder = new File(javaHome, "jmods");
@@ -168,12 +168,12 @@ public abstract class ProguardTask extends BaritoneGradleTask {
                     "Please ensure a full JDK with jmods is installed.");
         }
 
-        template.add(2, "-libraryjars  " + javaHome + "/jmods/java.base.jmod(!**.jar;!module-info.class)");
-        template.add(3, "-libraryjars  " + javaHome + "/jmods/java.desktop.jmod(!**.jar;!module-info.class)");
-        template.add(4, "-libraryjars  " + javaHome + "/jmods/java.net.http.jmod(!**.jar;!module-info.class)");
-        template.add(5, "-libraryjars  " + javaHome + "/jmods/java.sql.jmod(!**.jar;!module-info.class)");
-        template.add(6, "-libraryjars  " + javaHome + "/jmods/jdk.jfr.jmod(!**.jar;!module-info.class)");
-        template.add(7, "-libraryjars  " + javaHome + "/jmods/jdk.unsupported.jmod(!**.jar;!module-info.class)");
+        template.add("-libraryjars '" + javaHome + "/jmods/java.base.jmod'(!**.jar;!module-info.class)");
+        template.add("-libraryjars '" + javaHome + "/jmods/java.desktop.jmod'(!**.jar;!module-info.class)");
+        template.add("-libraryjars '" + javaHome + "/jmods/java.net.http.jmod'(!**.jar;!module-info.class)");
+        template.add("-libraryjars '" + javaHome + "/jmods/java.sql.jmod'(!**.jar;!module-info.class)");
+        template.add("-libraryjars '" + javaHome + "/jmods/jdk.jfr.jmod'(!**.jar;!module-info.class)");
+        template.add("-libraryjars '" + javaHome + "/jmods/jdk.unsupported.jmod'(!**.jar;!module-info.class)");
 
         {
             final Stream<File> libraries;
@@ -193,14 +193,14 @@ public abstract class ProguardTask extends BaritoneGradleTask {
                         .map(f -> isMcJar(f) ? mcJar : f);
             }
             libraries.forEach(f -> {
-                template.add(2, "-libraryjars '" + f + "'");
+                template.add("-libraryjars '" + f + "'");
             });
         }
 
         Files.createDirectories(this.getRootRelativeFile(PROGUARD_MAPPING_DIR));
 
         List<String> api = new ArrayList<>(template);
-        api.add(2, "-printmapping " + new File(this.getRootRelativeFile(PROGUARD_MAPPING_DIR).toFile(), "mappings-" + addCompTypeFirst("api.txt")));
+        api.add("-printmapping '" + new File(this.getRootRelativeFile(PROGUARD_MAPPING_DIR).toFile(), "mappings-" + addCompTypeFirst("api.txt")) + "'");
 
         // API config doesn't require any changes from the changes that we made to the template
         Files.write(getTemporaryFile(compType + PROGUARD_API_CONFIG), api);
@@ -208,7 +208,7 @@ public abstract class ProguardTask extends BaritoneGradleTask {
         // For the Standalone config, don't keep the API package
         List<String> standalone = new ArrayList<>(template);
         standalone.removeIf(s -> s.contains("# this is the keep api"));
-        standalone.add(2, "-printmapping " + new File(this.getRootRelativeFile(PROGUARD_MAPPING_DIR).toFile(), "mappings-" + addCompTypeFirst("standalone.txt")));
+        standalone.add("-printmapping '" + new File(this.getRootRelativeFile(PROGUARD_MAPPING_DIR).toFile(), "mappings-" + addCompTypeFirst("standalone.txt")) + "'");
         Files.write(getTemporaryFile(compType + PROGUARD_STANDALONE_CONFIG), standalone);
     }
 

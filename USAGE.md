@@ -8,17 +8,13 @@ Baritone commands can also by default be typed in the chatbox. However if you ma
 
 To disable direct chat control (with no prefix), turn off the `chatControl` setting. To disable chat control with the `#` prefix, turn off the `prefixControl` setting. In Impact, `.b` cannot be disabled. Be careful that you don't leave yourself with all control methods disabled (if you do, reset your settings by deleting the file `minecraft/baritone/settings.txt` and relaunching).
 
-# For Baritone 1.2.10+, 1.3.5+, 1.4.2+
+# For Baritone 2.0.0+
+The commands and settings have been modernized. `#help` is highly interactive with clickable elements and tab completion.
 
-Lots of the commands have changed, BUT `#help` is improved vastly (its clickable! commands have tab completion! oh my!).
-
-Try `#help` I promise it won't just send you back here =)
+Try `#help` for a full list of commands and their usage.
 
 "wtf where is cleararea" -> look at `#help sel`
-
 "wtf where is goto death, goto waypoint" -> look at `#help wp` 
-
-just look at `#help` lmao
 
 Watch this [showcase video](https://youtu.be/CZkLXWo4Fg4)!
 

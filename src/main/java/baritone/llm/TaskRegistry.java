@@ -11,6 +11,9 @@ public class TaskRegistry {
     public enum Phase {
         SEARCHING,
         MOVING_TO_CANDIDATE,
+        COLLECTING,
+        PAUSED,
+        STUCK,
         COMPLETED,
         FAILED
     }
@@ -23,6 +26,11 @@ public class TaskRegistry {
         public final long startTime;
         public long lastProgressAt;
         public int retargetCount = 0;
+        public Integer lockedEntityId = null;
+        public int targetQuantity = 1;
+        public int currentCount = 0;
+        public double lastDist = Double.MAX_VALUE;
+        public long lastProgressTime = 0;
 
         public Task(String type) {
             this.type = type;
@@ -45,6 +53,7 @@ public class TaskRegistry {
         activeTask = new Task(taskName);
         AutonomousLogger.log("TASK_START", taskName);
         Helper.HELPER.logDirect("[Bot] Starting task: " + taskName);
+        TaskMemory.updateMemory(activeTask);
         return true;
     }
 
@@ -56,7 +65,12 @@ public class TaskRegistry {
             AutonomousLogger.log("TASK_CLEAR", activeTask.type + " reason=" + reason);
             Helper.HELPER.logDirect("[Bot] Task cleared: " + activeTask.type + " (" + reason + ")");
             activeTask = null;
+            TaskMemory.updateMemory(null);
         }
+    }
+
+    public static synchronized void syncMemory() {
+        TaskMemory.updateMemory(activeTask);
     }
 
     public static synchronized Task getActiveTask() {
